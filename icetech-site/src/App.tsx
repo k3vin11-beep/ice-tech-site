@@ -11,8 +11,6 @@ import {
   Phone,
   Menu,
   X,
-  Github,
-  Linkedin,
   ExternalLink,
 } from "lucide-react";
 
@@ -958,8 +956,6 @@ function Contact() {
           </div>
 
           <div style={{ display: "flex", gap: 16, marginTop: 32 }}>
-            <Github size={18} color={T.textDim} />
-            <Linkedin size={18} color={T.textDim} />
           </div>
         </div>
 
