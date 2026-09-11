@@ -938,7 +938,7 @@ function Contact() {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Mail size={17} color={T.accent} />
               <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, color: T.text }}>
-                hello@icetech.dev
+                icetech.webdev@gmail.com
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
