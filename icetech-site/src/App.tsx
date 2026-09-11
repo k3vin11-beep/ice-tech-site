@@ -1049,8 +1049,9 @@ function Contact() {
                   required
                 />
               </div>
-              <button
+                            <button
                 type="submit"
+                disabled={sending}
                 style={{
                   background: T.accent,
                   color: "#04222B",
@@ -1059,14 +1060,27 @@ function Contact() {
                   fontFamily: "'IBM Plex Sans', sans-serif",
                   fontWeight: 600,
                   fontSize: 14.5,
-                  cursor: "pointer",
+                  cursor: sending ? "default" : "pointer",
+                  opacity: sending ? 0.6 : 1,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
                 }}
               >
-                Send message <ArrowRight size={16} />
+                {sending ? "Sending..." : "Send message"} <ArrowRight size={16} />
               </button>
+              {error && (
+                <p
+                  style={{
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontSize: 13.5,
+                    color: "#ff8080",
+                    marginTop: 14,
+                  }}
+                >
+                  Something went wrong sending that. Try again, or email us directly.
+                </p>
+              )}
             </form>
           )}
         </div>
