@@ -875,12 +875,38 @@ function Portfolio() {
 
 /* ---------- Contact ---------- */
 function Contact() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+    const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setSent(true);
+    setSending(true);
+    setError(false);
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_key: "3b680be9-5dc7-4350-9a6c-6830539176e0",
+          subject: `New project inquiry from ${form.name}`,
+          name: form.name,
+          email: form.email,
+          message: form.message,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+      } else {
+        setError(true);
+      }
+    } catch (err) {
+      setError(true);
+    } finally {
+      setSending(false);
+    }
   };
 
   const inputStyle = {
