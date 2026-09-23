@@ -51,8 +51,8 @@ function Fracture({ style, opacity = 1, color = T.accent }) {
   );
 }
 
-/* ---------- 3d snowfall ---------- */
-function Snowfall({ count = 900 }) {
+/* ---------- cloud flythrough to snowy city ---------- */
+function CloudCity() {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -63,57 +63,116 @@ function Snowfall({ count = 900 }) {
     const height = mount.clientHeight;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.z = 60;
+    scene.fog = new THREE.FogExp2(0x0a0e17, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
+    camera.position.set(0, 4, 40);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
-    const positions = new Float32Array(count * 3);
-    const speeds = new Float32Array(count);
-    const drift = new Float32Array(count);
-
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 140;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 120;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
-      speeds[i] = 0.05 + Math.random() * 0.14;
-      drift[i] = Math.random() * Math.PI * 2;
+    function makeCloudTexture() {
+      const size = 128;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, "rgba(255,255,255,0.9)");
+      grad.addColorStop(0.4, "rgba(255,255,255,0.35)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(canvas);
     }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const cloudTex = makeCloudTexture();
+    const clouds = [];
+    for (let i = 0; i < 160; i++) {
+      const mat = new THREE.SpriteMaterial({
+        map: cloudTex,
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.25 + Math.random() * 0.5,
+      });
+      const sprite = new THREE.Sprite(mat);
+      const scale = 6 + Math.random() * 10;
+      sprite.scale.set(scale, scale * 0.6, 1);
+      sprite.position.set(
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 30,
+        -Math.random() * 260 - 20
+      );
+      scene.add(sprite);
+      clouds.push(sprite);
+    }
 
-    const material = new THREE.PointsMaterial({
-      color: 0xeaf6fb,
-      size: 0.7,
-      transparent: true,
-      opacity: 0.75,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
+    const cityGroup = new THREE.Group();
+    const buildingMat = new THREE.MeshBasicMaterial({ color: 0x16202c });
+    const snowMat = new THREE.MeshBasicMaterial({ color: 0xeaf6fb });
+    const winMat = new THREE.MeshBasicMaterial({ color: 0x6fe3ff });
 
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
+    const gridSize = 9;
+    const spacing = 9;
+    for (let x = 0; x < gridSize; x++) {
+      for (let z = 0; z < gridSize; z++) {
+        if (Math.random() < 0.25) continue;
+        const h = 4 + Math.random() * 22;
+        const w = 3 + Math.random() * 2;
+        const bx = (x - gridSize / 2) * spacing + (Math.random() - 0.5) * 2;
+        const bz = (z - gridSize / 2) * spacing + (Math.random() - 0.5) * 2;
 
-    let frameId;
-    const animate = () => {
-      const pos = geometry.attributes.position.array;
-      for (let i = 0; i < count; i++) {
-        pos[i * 3 + 1] -= speeds[i];
-        pos[i * 3] += Math.sin(drift[i] + pos[i * 3 + 1] * 0.02) * 0.02;
-        if (pos[i * 3 + 1] < -60) {
-          pos[i * 3 + 1] = 60;
-          pos[i * 3] = (Math.random() - 0.5) * 140;
+        const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), buildingMat);
+        building.position.set(bx, h / 2, bz);
+        cityGroup.add(building);
+
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 1.05, 0.4, w * 1.05), snowMat);
+        cap.position.set(bx, h + 0.2, bz);
+        cityGroup.add(cap);
+
+        if (Math.random() < 0.5) {
+          const win = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), winMat);
+          win.position.set(bx + w / 2 + 0.03, h * (0.3 + Math.random() * 0.5), bz);
+          cityGroup.add(win);
         }
       }
-      geometry.attributes.position.needsUpdate = true;
+    }
+    cityGroup.position.z = -240;
+    scene.add(cityGroup);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(400, 400),
+      new THREE.MeshBasicMaterial({ color: 0x0d1622 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, 0, -200);
+    scene.add(ground);
+
+    let frameId;
+    const start = performance.now();
+    const flightDuration = 7000;
+    const startZ = 40;
+    const endZ = -190;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+
+    const animate = (now) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / flightDuration, 1);
+      const eased = ease(t);
+      camera.position.z = startZ + (endZ - startZ) * eased;
+      camera.position.y = 4 + Math.sin(elapsed * 0.0002) * 1.5;
+      scene.fog.density = 0.012 - eased * 0.009;
+
+      if (t >= 1) {
+        camera.position.x = Math.sin(elapsed * 0.00015) * 3;
+      }
+
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
     };
-    animate();
+    frameId = requestAnimationFrame(animate);
 
     const handleResize = () => {
       const w = mount.clientWidth;
@@ -127,21 +186,15 @@ function Snowfall({ count = 900 }) {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
-      geometry.dispose();
-      material.dispose();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
-  }, [count]);
+  }, []);
 
   return (
     <div
       ref={mountRef}
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-      }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       aria-hidden="true"
     />
   );
@@ -384,7 +437,7 @@ function Home({ setPage }) {
     <>
       {/* hero */}
       <div style={{ position: "relative", overflow: "hidden", borderBottom: `1px solid ${T.line}` }}>
-        <Snowfall count={700} />
+        <CloudCity />
         <Fracture style={{ right: -60, top: -40, width: 340, height: 340 }} opacity={0.35} />
         <Section style={{ paddingTop: 96, paddingBottom: 96, position: "relative" }}>
           <div style={{ maxWidth: 620 }}>
