@@ -33,7 +33,7 @@ const fontStack = `
 `;
 
 /* ---------- fracture line motif ---------- */
-function Fracture({ style, opacity = 1, color = T.accent }) {
+function Fracture({ style, opacity = 1, color = T.accent }: any) {
   return (
     <svg
       viewBox="0 0 400 400"
@@ -65,8 +65,14 @@ function CloudCity() {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x0a0e17, 0.012);
 
+    const ambient = new THREE.AmbientLight(0x6fa8c9, 0.6);
+    scene.add(ambient);
+    const moonLight = new THREE.DirectionalLight(0xcfe9ff, 0.9);
+    moonLight.position.set(-40, 60, 20);
+    scene.add(moonLight);
+
     const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
-    camera.position.set(0, 4, 40);
+    camera.position.set(10, 4, 40);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
@@ -80,9 +86,10 @@ function CloudCity() {
       canvas.height = size;
       const ctx = canvas.getContext("2d");
       const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-      grad.addColorStop(0, "rgba(255,255,255,0.9)");
-      grad.addColorStop(0.4, "rgba(255,255,255,0.35)");
-      grad.addColorStop(1, "rgba(255,255,255,0)");
+      grad.addColorStop(0, "rgba(235,245,250,0.55)");
+      grad.addColorStop(0.35, "rgba(210,230,240,0.28)");
+      grad.addColorStop(0.7, "rgba(190,215,230,0.1)");
+      grad.addColorStop(1, "rgba(190,215,230,0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, size, size);
       return new THREE.CanvasTexture(canvas);
@@ -90,12 +97,12 @@ function CloudCity() {
 
     const cloudTex = makeCloudTexture();
     const clouds = [];
-    for (let i = 0; i < 160; i++) {
+    for (let i = 0; i < 110; i++) {
       const mat = new THREE.SpriteMaterial({
         map: cloudTex,
         transparent: true,
         depthWrite: false,
-        opacity: 0.25 + Math.random() * 0.5,
+        opacity: 0.15 + Math.random() * 0.25,
       });
       const sprite = new THREE.Sprite(mat);
       const scale = 6 + Math.random() * 10;
@@ -110,8 +117,8 @@ function CloudCity() {
     }
 
     const cityGroup = new THREE.Group();
-    const buildingMat = new THREE.MeshBasicMaterial({ color: 0x16202c });
-    const snowMat = new THREE.MeshBasicMaterial({ color: 0xeaf6fb });
+    const buildingMat = new THREE.MeshLambertMaterial({ color: 0x223449 });
+    const snowMat = new THREE.MeshLambertMaterial({ color: 0xf3f9fc });
     const winMat = new THREE.MeshBasicMaterial({ color: 0x6fe3ff });
 
     const gridSize = 9;
@@ -139,12 +146,12 @@ function CloudCity() {
         }
       }
     }
-    cityGroup.position.z = -240;
+    cityGroup.position.set(14, 0, -240);
     scene.add(cityGroup);
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(400, 400),
-      new THREE.MeshBasicMaterial({ color: 0x0d1622 })
+      new THREE.MeshLambertMaterial({ color: 0x121b28 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, 0, -200);
@@ -166,7 +173,7 @@ function CloudCity() {
       scene.fog.density = 0.012 - eased * 0.009;
 
       if (t >= 1) {
-        camera.position.x = Math.sin(elapsed * 0.00015) * 3;
+        camera.position.x = 10 + Math.sin(elapsed * 0.00015) * 3;
       }
 
       renderer.render(scene, camera);
@@ -194,13 +201,13 @@ function CloudCity() {
   return (
     <div
       ref={mountRef}
-      style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.75 }}
       aria-hidden="true"
     />
   );
 }
 
-function Divider({ inset }) {
+function Divider({ inset }: any) {
   return (
     <div
       style={{
@@ -215,7 +222,7 @@ function Divider({ inset }) {
 /* ---------- nav ---------- */
 const PAGES = ["Home", "About", "Services", "Portfolio", "Contact"];
 
-function Nav({ page, setPage }) {
+function Nav({ page, setPage }: any) {
   const [open, setOpen] = useState(false);
   return (
     <header
@@ -370,7 +377,7 @@ function Nav({ page, setPage }) {
 }
 
 /* ---------- shared page shell ---------- */
-function Section({ children, style }) {
+function Section({ children, style }: any) {
   return (
     <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px", ...style }}>
       {children}
@@ -378,7 +385,7 @@ function Section({ children, style }) {
   );
 }
 
-function Eyebrow({ children }) {
+function Eyebrow({ children }: any) {
   return (
     <p
       style={{
@@ -395,7 +402,7 @@ function Eyebrow({ children }) {
 }
 
 /* ---------- Home ---------- */
-function Home({ setPage }) {
+function Home({ setPage }: any) {
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setRevealed(true), 80);
@@ -727,7 +734,7 @@ function About() {
 }
 
 /* ---------- Services ---------- */
-function Services({ setPage }) {
+function Services({ setPage }: any) {
   const services = [
     {
       icon: Code2,
@@ -928,7 +935,7 @@ function Portfolio() {
 
 /* ---------- Contact ---------- */
 function Contact() {
-    const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
@@ -942,7 +949,7 @@ function Contact() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_key: "3b680be9-5dc7-4350-9a6c-6830539176e0",
+          access_key: "PASTE_YOUR_ACCESS_KEY_HERE",
           subject: `New project inquiry from ${form.name}`,
           name: form.name,
           email: form.email,
@@ -971,7 +978,7 @@ function Contact() {
     fontFamily: "'IBM Plex Sans', sans-serif",
     fontSize: 14.5,
     outline: "none",
-    boxSizing: "border-box",
+    boxSizing: "border-box" as const,
   };
 
   const labelStyle = {
@@ -1017,7 +1024,7 @@ function Contact() {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Mail size={17} color={T.accent} />
               <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, color: T.text }}>
-                webdev.icetech@gmail.com
+                icetech.webdev@gmail.com
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1032,9 +1039,6 @@ function Contact() {
                 Arcadia, Pretoria, South Africa
               </span>
             </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 16, marginTop: 32 }}>
           </div>
         </div>
 
@@ -1102,7 +1106,7 @@ function Contact() {
                   required
                 />
               </div>
-                            <button
+              <button
                 type="submit"
                 disabled={sending}
                 style={{
@@ -1148,7 +1152,7 @@ function Contact() {
 }
 
 /* ---------- Footer ---------- */
-function Footer({ setPage }) {
+function Footer({ setPage }: any) {
   return (
     <footer style={{ borderTop: `1px solid ${T.line}`, background: T.panelAlt }}>
       <Section style={{ paddingTop: 40, paddingBottom: 40 }}>
@@ -1224,7 +1228,7 @@ export default function ICETECHSite() {
     window.scrollTo(0, 0);
   }, [page]);
 
-  const pages = {
+  const pages: any = {
     Home: <Home setPage={setPage} />,
     About: <About />,
     Services: <Services setPage={setPage} />,
