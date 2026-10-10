@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 
 const WHATSAPP_NUMBER = "27810782998"; 
-const BUSINESS_EMAIL = "icetech.weddev@gmail.com";
-const WEB3FORMS_KEY = "75d941f3-484f-402f-917d-c865e10dcd4f"; 
+const BUSINESS_EMAIL = "icetech.webdev@gmail.com";
+const WEB3FORMS_KEY = "75d941f3-484f-402f-917d-c865e10dcd4f";
 const SUPABASE_URL = "https://gdmskhylzxvkkylimflc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_94gWC-3BsfHfb7vc2VKbfg_cMlso0uJ";
-const RAIN_OPACITY = 0.42; 
+const RAIN_OPACITY = 0.45; 
 const EMAIL_ENABLED = !WEB3FORMS_KEY.startsWith("PASTE");
 const TRACKING_ENABLED = !SUPABASE_URL.startsWith("PASTE");
 
@@ -16,8 +16,8 @@ const T = {
   panel: "#1E1E21",
   glass: "rgba(26,26,29,0.9)",
   line: "#3A3A40",
-  accent: "#C6FF00", // spray-paint lime
-  pink: "#FF2E93", // graffiti pink
+  accent: "#C6FF00", 
+  pink: "#FF2E93", 
   text: "#F2F2F0",
   dim: "#A3A3AB",
 };
@@ -31,46 +31,61 @@ const sbHeaders = (token?: string) => {
   return h;
 };
 
+
+const vpad = (top: number, bottom?: number) => ({
+  paddingTop: top,
+  paddingBottom: bottom === undefined ? top : bottom,
+});
+
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+:root { --gutter: clamp(20px, 4vw, 72px); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: ${T.bg}; }
 body { margin: 0; background: ${T.bg}; color: ${T.text}; font-family: 'IBM Plex Sans', sans-serif; }
 h1, h2 { font-family: 'Anton', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; }
 h3 { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.02em; margin: 0; }
 .page { position: relative; z-index: 1; }
-.wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+.wrap { width: 100%; max-width: 2200px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
 .btn { display: inline-block; padding: 13px 22px; font-weight: 600; font-size: 15px; text-decoration: none; border: 2px solid transparent; cursor: pointer; font-family: inherit; }
 .btn-primary { background: ${T.accent}; color: ${T.bg}; box-shadow: 4px 4px 0 #000; }
 .btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 ${T.pink}; }
 .btn-ghost { border-color: ${T.line}; color: ${T.text}; background: rgba(20,20,22,0.6); }
 .btn-ghost:hover { border-color: ${T.accent}; }
-.nav-link { color: ${T.dim}; text-decoration: none; font-size: 14.5px; margin-right: 24px; }
+.nav-link { color: ${T.dim}; text-decoration: none; font-size: 14.5px; margin-right: 28px; }
 .nav-link:hover { color: ${T.accent}; }
 .card { background: ${T.glass}; border: 2px solid ${T.line}; box-shadow: 6px 6px 0 #000; transition: transform .15s, box-shadow .15s; }
 .card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 ${T.pink}; }
 .tag { font-family: 'Permanent Marker', cursive; color: ${T.pink}; display: inline-block; transform: rotate(-3deg); }
 .marker { background-image: linear-gradient(transparent 62%, rgba(255,46,147,0.65) 62%); padding: 0 4px; }
 .sticker { font-family: 'Permanent Marker', cursive; background: ${T.pink}; color: ${T.bg}; padding: 4px 14px; display: inline-block; transform: rotate(-4deg); font-size: 16px; }
-.splat { position: absolute; top: 30px; right: 4%; width: 280px; height: 280px; opacity: 0.6;
+.splat { position: absolute; top: 24px; right: 2%; width: 300px; height: 300px; opacity: 0.5;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,46,147,0.9) 0 40px, transparent 42px),
+    radial-gradient(circle at 50% 50%, rgba(255,46,147,0.9) 0 42px, transparent 44px),
     radial-gradient(circle at 80% 28%, rgba(255,46,147,0.9) 0 10px, transparent 11px),
     radial-gradient(circle at 22% 72%, rgba(255,46,147,0.9) 0 13px, transparent 14px),
     radial-gradient(circle at 86% 74%, rgba(198,255,0,0.9) 0 8px, transparent 9px),
     radial-gradient(circle at 14% 24%, rgba(198,255,0,0.9) 0 5px, transparent 6px),
     radial-gradient(circle at 62% 88%, rgba(255,46,147,0.9) 0 6px, transparent 7px); }
-.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-@media (max-width: 760px) { .nav-links { display: none; } .contact-grid { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .splat { display: none; } }
+.hero-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; align-items: center; }
+.contact-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 56px; align-items: start; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.rain-toggle { position: fixed; left: 16px; bottom: 16px; z-index: 30; background: rgba(20,20,22,0.88); color: ${T.dim}; border: 2px solid ${T.line}; font-family: inherit; font-size: 12.5px; padding: 6px 12px; cursor: pointer; }
+.rain-toggle:hover { color: ${T.accent}; border-color: ${T.accent}; }
+@media (max-width: 1100px) { .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 960px) { .hero-grid, .contact-grid { grid-template-columns: 1fr; } .hero-side { display: none; } .nav-links { display: none; } }
+@media (max-width: 640px) { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } .splat { display: none; } }
 `;
 
-/* ================= BACKGROUND: RAINING 1s AND 0s ================= */
 
-function CodeRain() {
+
+function CodeRain({ enabled }: any) {
   const ref = useRef<any>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -81,22 +96,20 @@ function CodeRain() {
     let h = 0;
     let cols = 0;
     let drops: number[] = [];
-    let frameId = 0;
-    let last = 0;
 
     const setup = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = window.innerWidth;
       h = window.innerHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = T.bg;
       ctx.fillRect(0, 0, w, h);
       cols = Math.ceil(w / fontSize);
-      drops = Array.from({ length: cols }, () => -Math.floor(Math.random() * 40));
+      drops = Array.from({ length: cols }, () => -Math.floor(Math.random() * 30));
     };
 
     const draw = () => {
@@ -117,28 +130,20 @@ function CodeRain() {
       }
     };
 
-    const loop = (t: number) => {
-      frameId = requestAnimationFrame(loop);
-      if (t - last < 45) return; // ~22 frames a second keeps it light
-      last = t;
-      draw();
-    };
-
     setup();
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) {
-      for (let n = 0; n < 150; n++) draw();
-    } else {
-      frameId = requestAnimationFrame(loop);
-    }
-
+    
+    const timer = window.setInterval(() => {
+      if (!document.hidden) draw();
+    }, 50);
     window.addEventListener("resize", setup);
+
     return () => {
-      cancelAnimationFrame(frameId);
+      window.clearInterval(timer);
       window.removeEventListener("resize", setup);
     };
-  }, []);
+  }, [enabled]);
 
+  if (!enabled) return null;
   return (
     <canvas
       ref={ref}
@@ -148,38 +153,46 @@ function CodeRain() {
   );
 }
 
-/* ================= PUBLIC SITE ================= */
 
-const SERVICES = ["Brochure Website", "Booking & Payments Website", "Digital Portfolio", "Not sure yet"];
 
 const PACKAGES = [
   {
     service: "Brochure Website",
+    short: "Brochure website",
     prefix: "From ",
     price: "R1,500",
-    big: true,
-    blurb: "A clean online presence so customers can find you and contact you.",
-    items: ["3–5 pages", "Mobile-friendly design", "Contact form so customers can reach you", "Your contact details and business info"],
+    blurb: "A clean online presence with a WhatsApp button so customers can message you instantly.",
+    items: ["3–5 pages", "Mobile-friendly design", "WhatsApp contact button linked to your number", "Your contact details and business info"],
+  },
+  {
+    service: "Booking Website",
+    short: "Booking website",
+    prefix: "",
+    price: "R4,000",
+    blurb: "Let customers book you online instead of going back and forth.",
+    items: ["Online booking feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
   },
   {
     service: "Booking & Payments Website",
+    short: "Booking + payments",
     prefix: "",
-    price: "R3,500",
-    big: true,
-    blurb: "For businesses that want customers to book and pay online.",
-    items: ["Online booking feature", "Online payment feature", "Contact form so customers can reach you", "Mobile-friendly design"],
+    price: "R6,000",
+    blurb: "Customers book and pay online, all in one site.",
+    items: ["Online booking feature", "Online payment feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
   },
   {
-    service: "Digital Portfolio",
+    service: "Personal Portfolio",
+    short: "Personal portfolio",
     prefix: "",
-    price: "Custom quote",
-    big: false,
+    price: "R2,500",
     blurb: "Show your work, projects or CV online in one place you can share.",
     items: ["Showcase your work and projects", "Mobile-friendly design", "One link to share with clients or employers"],
   },
 ];
 
-// Edit this list: add live links in url, and remove anything that isn't finished or the owner hasn't agreed to.
+const SERVICES = [...PACKAGES.map((p) => p.service), "Not sure yet"];
+
+
 const PROJECTS = [
   { name: "Briis Best Bakes", type: "Home bakery site with a photo gallery of cakes, muffins and custom bakes", url: "" },
   { name: "Cynosure Wig Atelier", type: "Wig installation services and price list", url: "" },
@@ -187,7 +200,7 @@ const PROJECTS = [
   { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "" },
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
   { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
-  { name : "Ndzalo's Digital Portfolio", type: "Portfolio website for a Actuary", url: "" },
+  { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "" },
 ];
 
 const COMING_SOON = [
@@ -208,7 +221,7 @@ function PackageCard({ pkg, onPick }: any) {
       <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: "10px 0 16px" }}>{pkg.blurb}</p>
       <div style={{ marginBottom: 18 }}>
         <span style={{ color: T.dim, fontSize: 14 }}>{pkg.prefix}</span>
-        <span style={{ fontFamily: "'Anton', sans-serif", fontSize: pkg.big ? 44 : 30, color: T.accent }}>{pkg.price}</span>
+        <span style={{ fontFamily: "'Anton', sans-serif", fontSize: 44, color: T.accent }}>{pkg.price}</span>
       </div>
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
         {pkg.items.map((item: string) => (
@@ -219,8 +232,31 @@ function PackageCard({ pkg, onPick }: any) {
         ))}
       </ul>
       <a className="btn btn-primary" href="#contact" onClick={() => onPick(pkg.service)} style={{ textAlign: "center" }}>
-        {pkg.big ? "Get this package" : "Ask for a quote"}
+        Get this package
       </a>
+    </div>
+  );
+}
+
+function PriceBoard() {
+  return (
+    <div className="card hero-side" style={{ padding: 0, fontFamily: "monospace" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: `2px solid ${T.line}` }}>
+        <span style={{ width: 11, height: 11, borderRadius: 99, background: T.pink, display: "inline-block" }} />
+        <span style={{ width: 11, height: 11, borderRadius: 99, background: T.accent, display: "inline-block" }} />
+        <span style={{ width: 11, height: 11, borderRadius: 99, background: T.line, display: "inline-block" }} />
+        <span style={{ marginLeft: 8, color: T.dim, fontSize: 13 }}>icetech — price list</span>
+      </div>
+      <div style={{ padding: "20px 22px", fontSize: 16, lineHeight: 2.1 }}>
+        <div style={{ color: T.dim }}>$ icetech --prices</div>
+        {PACKAGES.map((p) => (
+          <div key={p.service} style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <span>{p.short}</span>
+            <span style={{ color: T.accent }}>{p.price}</span>
+          </div>
+        ))}
+        <div style={{ color: T.pink }}>&gt; ready when you are</div>
+      </div>
     </div>
   );
 }
@@ -235,7 +271,7 @@ function ContactForm({ service, setService }: any) {
     const text = `Hi ICETECH, I'm ${form.name}.\nI'm interested in: ${service}.\n\n${form.message}\n\nMy email: ${form.email}`;
     const url = waLink(text);
     setWaUrl(url);
-    // open the WhatsApp chat straight away so the browser doesn't block it
+    
     window.open(url, "_blank", "noopener,noreferrer");
     setStatus("sending");
     if (!EMAIL_ENABLED) {
@@ -326,12 +362,12 @@ function ContactForm({ service, setService }: any) {
 }
 
 function Site() {
-  const [service, setService] = useState(SERVICES[3]);
+  const [service, setService] = useState(SERVICES[SERVICES.length - 1]);
 
   return (
     <>
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(20,20,22,0.9)", backdropFilter: "blur(6px)", borderBottom: `2px solid ${T.line}` }}>
-        <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px" }}>
+        <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", ...vpad(12) }}>
           <a href="#home" style={{ textDecoration: "none", color: T.text, fontFamily: "'Anton', sans-serif", fontSize: 24, letterSpacing: "0.02em" }}>
             <span style={{ color: T.accent }}>&gt;_</span> ICETECH
           </a>
@@ -350,26 +386,29 @@ function Site() {
       <main>
         <section id="home" style={{ position: "relative", overflow: "hidden", borderBottom: `2px solid ${T.line}` }}>
           <div className="splat" aria-hidden="true" />
-          <div className="wrap" style={{ padding: "96px 24px 88px", position: "relative" }}>
-            <div className="tag" style={{ fontSize: 22, marginBottom: 14 }}>web design for small businesses</div>
-            <h1 style={{ fontSize: "clamp(42px, 8vw, 84px)", lineHeight: 1.02, maxWidth: 760, textShadow: "0 2px 14px #000" }}>
-              Professional websites for your business, <span className="marker" style={{ color: T.accent }}>from R1,500.</span>
-            </h1>
-            <p style={{ color: T.text, opacity: 0.85, fontSize: 17, lineHeight: 1.65, maxWidth: 540, margin: "24px 0 32px", textShadow: "0 1px 8px #000" }}>
-              ICETECH builds websites, booking and payment sites, and digital portfolios for small businesses in Pretoria.
-            </p>
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <a className="btn btn-primary" href="#contact">Get a quote</a>
-              <a className="btn btn-ghost" href="#work">See our work</a>
+          <div className="wrap hero-grid" style={{ ...vpad(96, 88), position: "relative" }}>
+            <div>
+              <div className="tag" style={{ fontSize: 22, marginBottom: 14 }}>web design for small businesses</div>
+              <h1 style={{ fontSize: "clamp(42px, 6vw, 96px)", lineHeight: 1.02, textShadow: "0 2px 14px #000" }}>
+                Professional websites for your business, <span className="marker" style={{ color: T.accent }}>from R1,500.</span>
+              </h1>
+              <p style={{ color: T.text, opacity: 0.85, fontSize: 17, lineHeight: 1.65, maxWidth: 560, margin: "24px 0 32px", textShadow: "0 1px 8px #000" }}>
+                ICETECH builds websites, booking and payment sites, and personal portfolios for small businesses in Pretoria.
+              </p>
+              <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                <a className="btn btn-primary" href="#contact">Get a quote</a>
+                <a className="btn btn-ghost" href="#work">See our work</a>
+              </div>
             </div>
+            <PriceBoard />
           </div>
         </section>
 
         <section id="services">
-          <div className="wrap" style={{ padding: "72px 24px" }}>
-            <h2 style={{ fontSize: 40 }}>What we build</h2>
+          <div className="wrap" style={vpad(72)}>
+            <h2 style={{ fontSize: 44 }}>What we build</h2>
             <p style={{ color: T.dim, fontSize: 16, margin: "10px 0 36px" }}>Simple, upfront pricing.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+            <div className="grid-4">
               {PACKAGES.map((pkg) => (
                 <PackageCard key={pkg.service} pkg={pkg} onPick={setService} />
               ))}
@@ -378,10 +417,10 @@ function Site() {
         </section>
 
         <section id="work" style={{ background: "rgba(20,20,22,0.82)", borderTop: `2px solid ${T.line}`, borderBottom: `2px solid ${T.line}` }}>
-          <div className="wrap" style={{ padding: "72px 24px" }}>
-            <h2 style={{ fontSize: 40 }}>Our work</h2>
+          <div className="wrap" style={vpad(72)}>
+            <h2 style={{ fontSize: 44 }}>Our work</h2>
             <p style={{ color: T.dim, fontSize: 16, margin: "10px 0 36px" }}>Some of the sites we've built.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+            <div className="grid-4">
               {PROJECTS.map((p, i) => (
                 <div key={p.name} className="card" style={{ padding: 24 }}>
                   <div className="tag" style={{ fontSize: 20, marginBottom: 6 }}>0{i + 1}</div>
@@ -399,12 +438,12 @@ function Site() {
         </section>
 
         <section id="soon">
-          <div className="wrap" style={{ padding: "72px 24px" }}>
+          <div className="wrap" style={vpad(72)}>
             <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginBottom: 36 }}>
-              <h2 style={{ fontSize: 40 }}>Coming soon</h2>
+              <h2 style={{ fontSize: 44 }}>Coming soon</h2>
               <span className="sticker">upcoming services</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+            <div className="grid-2">
               {COMING_SOON.map((s) => (
                 <div key={s.name} className="card" style={{ padding: 26, borderStyle: "dashed" }}>
                   <h3 style={{ fontSize: 24, marginBottom: 8 }}>{s.name}</h3>
@@ -416,9 +455,9 @@ function Site() {
         </section>
 
         <section id="how" style={{ background: "rgba(20,20,22,0.82)", borderTop: `2px solid ${T.line}`, borderBottom: `2px solid ${T.line}` }}>
-          <div className="wrap" style={{ padding: "72px 24px" }}>
-            <h2 style={{ fontSize: 40, marginBottom: 36 }}>How it works</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 28 }}>
+          <div className="wrap" style={vpad(72)}>
+            <h2 style={{ fontSize: 44, marginBottom: 36 }}>How it works</h2>
+            <div className="grid-3">
               {STEPS.map((s) => (
                 <div key={s.n}>
                   <div className="tag" style={{ fontSize: 24, marginBottom: 6 }}>{s.n}</div>
@@ -431,11 +470,11 @@ function Site() {
         </section>
 
         <section id="contact">
-          <div className="wrap" style={{ padding: "72px 24px 88px" }}>
+          <div className="wrap" style={vpad(72, 88)}>
             <div className="contact-grid">
               <div>
-                <h2 style={{ fontSize: 40 }}>Get a quote</h2>
-                <p style={{ color: T.dim, fontSize: 16, lineHeight: 1.65, margin: "14px 0 24px", maxWidth: 380 }}>
+                <h2 style={{ fontSize: 44 }}>Get a quote</h2>
+                <p style={{ color: T.dim, fontSize: 16, lineHeight: 1.65, margin: "14px 0 24px", maxWidth: 420 }}>
                   Tell us about your business and what you need. We'll get back to you.
                 </p>
                 <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.8, margin: 0 }}>
@@ -451,7 +490,7 @@ function Site() {
       </main>
 
       <footer style={{ borderTop: `2px solid ${T.line}`, background: "rgba(20,20,22,0.9)" }}>
-        <div className="wrap" style={{ padding: 24, color: T.dim, fontSize: 13.5 }}>
+        <div className="wrap" style={{ ...vpad(24), color: T.dim, fontSize: 13.5 }}>
           © {new Date().getFullYear()} ICETECH. All rights reserved.
         </div>
       </footer>
@@ -459,7 +498,7 @@ function Site() {
   );
 }
 
-/* ================= ADMIN VIEW (open the site with #admin on the end) ================= */
+
 
 function Stat({ label, value, sub }: any) {
   return (
@@ -576,7 +615,7 @@ function Admin() {
   };
 
   return (
-    <div className="wrap" style={{ padding: "32px 24px 64px", minHeight: "100vh" }}>
+    <div className="wrap" style={{ ...vpad(32, 64), minHeight: "100vh", maxWidth: 1100, margin: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
         <h1 style={{ fontSize: 34 }}>ICETECH Admin</h1>
         <div style={{ display: "flex", gap: 10 }}>
@@ -652,10 +691,27 @@ function Admin() {
   );
 }
 
-/* ================= APP ================= */
+
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(window.location.hash === "#admin");
+  const [rainOn, setRainOn] = useState(() => {
+    try {
+      return localStorage.getItem("icetech_rain") !== "off";
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const toggleRain = () => {
+    const next = !rainOn;
+    setRainOn(next);
+    try {
+      localStorage.setItem("icetech_rain", next ? "on" : "off");
+    } catch (e) {
+    
+    }
+  };
 
   useEffect(() => {
     const onHash = () => setIsAdmin(window.location.hash === "#admin");
@@ -663,7 +719,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // count one visit per browser session (skips the admin page and your own logged-in device)
+
   useEffect(() => {
     if (isAdmin || !TRACKING_ENABLED) return;
     try {
@@ -681,15 +737,18 @@ export default function App() {
         body: JSON.stringify({ visitor_id: vid, path: window.location.pathname }),
       }).catch(() => {});
     } catch (e) {
-      
+    
     }
   }, [isAdmin]);
 
   return (
     <div>
       <style>{css}</style>
-      <CodeRain />
+      <CodeRain enabled={rainOn} />
       <div className="page">{isAdmin ? <Admin /> : <Site />}</div>
+      <button className="rain-toggle" onClick={toggleRain} aria-pressed={rainOn}>
+        Code rain: {rainOn ? "on" : "off"}
+      </button>
     </div>
   );
 }
