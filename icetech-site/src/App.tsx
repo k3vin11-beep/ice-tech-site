@@ -1,1247 +1,695 @@
-import React, { useState, useEffect, useRef } from "react";
-import * as THREE from "three";
-import {
-  Code2,
-  Server,
-  Cloud,
-  LifeBuoy,
-  ArrowRight,
-  Mail,
-  MapPin,
-  Phone,
-  Menu,
-  X,
-  ExternalLink,
-} from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
-/* ---------- design tokens ---------- */
+
+const WHATSAPP_NUMBER = "0810782998"; 
+const BUSINESS_EMAIL = "icetech.weddev@gmail.com";
+const WEB3FORMS_KEY = "75d941f3-484f-402f-917d-c865e10dcd4f"; 
+const SUPABASE_URL = "https://gdmskhylzxvkkylimflc.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_94gWC-3BsfHfb7vc2VKbfg_cMlso0uJ";
+const RAIN_OPACITY = 0.42; 
+const EMAIL_ENABLED = !WEB3FORMS_KEY.startsWith("PASTE");
+const TRACKING_ENABLED = !SUPABASE_URL.startsWith("PASTE");
+
+
 const T = {
-  bg: "#0A0E17",
-  panel: "#111826",
-  panelAlt: "#0D1320",
-  line: "#243040",
-  lineSoft: "#1A2431",
-  accent: "#6FE3FF",
-  accentDim: "#2B7A8C",
-  text: "#EAF2F6",
-  textDim: "#8CA0AF",
-  textFaint: "#5C6B7A",
+  bg: "#141416",
+  panel: "#1E1E21",
+  glass: "rgba(26,26,29,0.9)",
+  line: "#3A3A40",
+  accent: "#C6FF00", // spray-paint lime
+  pink: "#FF2E93", // graffiti pink
+  text: "#F2F2F0",
+  dim: "#A3A3AB",
 };
 
-const fontStack = `
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+const waLink = (msg: string) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+
+const sbHeaders = (token?: string) => {
+  const h: any = { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" };
+  if (token) h.Authorization = `Bearer ${token}`;
+  return h;
+};
+
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: ${T.bg}; }
+body { margin: 0; background: ${T.bg}; color: ${T.text}; font-family: 'IBM Plex Sans', sans-serif; }
+h1, h2 { font-family: 'Anton', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; }
+h3 { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.02em; margin: 0; }
+.page { position: relative; z-index: 1; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+.btn { display: inline-block; padding: 13px 22px; font-weight: 600; font-size: 15px; text-decoration: none; border: 2px solid transparent; cursor: pointer; font-family: inherit; }
+.btn-primary { background: ${T.accent}; color: ${T.bg}; box-shadow: 4px 4px 0 #000; }
+.btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 ${T.pink}; }
+.btn-ghost { border-color: ${T.line}; color: ${T.text}; background: rgba(20,20,22,0.6); }
+.btn-ghost:hover { border-color: ${T.accent}; }
+.nav-link { color: ${T.dim}; text-decoration: none; font-size: 14.5px; margin-right: 24px; }
+.nav-link:hover { color: ${T.accent}; }
+.card { background: ${T.glass}; border: 2px solid ${T.line}; box-shadow: 6px 6px 0 #000; transition: transform .15s, box-shadow .15s; }
+.card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 ${T.pink}; }
+.tag { font-family: 'Permanent Marker', cursive; color: ${T.pink}; display: inline-block; transform: rotate(-3deg); }
+.marker { background-image: linear-gradient(transparent 62%, rgba(255,46,147,0.65) 62%); padding: 0 4px; }
+.sticker { font-family: 'Permanent Marker', cursive; background: ${T.pink}; color: ${T.bg}; padding: 4px 14px; display: inline-block; transform: rotate(-4deg); font-size: 16px; }
+.splat { position: absolute; top: 30px; right: 4%; width: 280px; height: 280px; opacity: 0.6;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,46,147,0.9) 0 40px, transparent 42px),
+    radial-gradient(circle at 80% 28%, rgba(255,46,147,0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 22% 72%, rgba(255,46,147,0.9) 0 13px, transparent 14px),
+    radial-gradient(circle at 86% 74%, rgba(198,255,0,0.9) 0 8px, transparent 9px),
+    radial-gradient(circle at 14% 24%, rgba(198,255,0,0.9) 0 5px, transparent 6px),
+    radial-gradient(circle at 62% 88%, rgba(255,46,147,0.9) 0 6px, transparent 7px); }
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+@media (max-width: 760px) { .nav-links { display: none; } .contact-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .splat { display: none; } }
 `;
 
-/* ---------- fracture line motif ---------- */
-function Fracture({ style, opacity = 1, color = T.accent }: any) {
-  return (
-    <svg
-      viewBox="0 0 400 400"
-      style={{ position: "absolute", ...style }}
-      fill="none"
-      aria-hidden="true"
-    >
-      <path d="M0 60 L120 60 L150 10 L260 120 L400 90" stroke={color} strokeWidth="1" opacity={opacity} />
-      <path d="M20 400 L80 300 L60 210 L180 190 L160 90" stroke={color} strokeWidth="1" opacity={opacity * 0.6} />
-      <path d="M400 250 L300 260 L280 340 L340 400" stroke={color} strokeWidth="1" opacity={opacity * 0.4} />
-      <circle cx="150" cy="10" r="2.5" fill={color} opacity={opacity} />
-      <circle cx="260" cy="120" r="2.5" fill={color} opacity={opacity * 0.7} />
-      <circle cx="180" cy="190" r="2.5" fill={color} opacity={opacity * 0.5} />
-    </svg>
-  );
-}
+/* ================= BACKGROUND: RAINING 1s AND 0s ================= */
 
-/* ---------- cloud flythrough to snowy city ---------- */
-function CloudCity() {
-  const mountRef = useRef(null);
+function CodeRain() {
+  const ref = useRef<any>(null);
 
   useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const width = mount.clientWidth;
-    const height = mount.clientHeight;
+    const fontSize = 16;
+    let w = 0;
+    let h = 0;
+    let cols = 0;
+    let drops: number[] = [];
+    let frameId = 0;
+    let last = 0;
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0e17, 0.012);
+    const setup = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = T.bg;
+      ctx.fillRect(0, 0, w, h);
+      cols = Math.ceil(w / fontSize);
+      drops = Array.from({ length: cols }, () => -Math.floor(Math.random() * 40));
+    };
 
-    const ambient = new THREE.AmbientLight(0x6fa8c9, 0.6);
-    scene.add(ambient);
-    const moonLight = new THREE.DirectionalLight(0xcfe9ff, 0.9);
-    moonLight.position.set(-40, 60, 20);
-    scene.add(moonLight);
-
-    const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
-    camera.position.set(10, 4, 40);
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
-
-    function makeCloudTexture() {
-      const size = 128;
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-      grad.addColorStop(0, "rgba(235,245,250,0.55)");
-      grad.addColorStop(0.35, "rgba(210,230,240,0.28)");
-      grad.addColorStop(0.7, "rgba(190,215,230,0.1)");
-      grad.addColorStop(1, "rgba(190,215,230,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
-      return new THREE.CanvasTexture(canvas);
-    }
-
-    const cloudTex = makeCloudTexture();
-    const clouds = [];
-    for (let i = 0; i < 110; i++) {
-      const mat = new THREE.SpriteMaterial({
-        map: cloudTex,
-        transparent: true,
-        depthWrite: false,
-        opacity: 0.15 + Math.random() * 0.25,
-      });
-      const sprite = new THREE.Sprite(mat);
-      const scale = 6 + Math.random() * 10;
-      sprite.scale.set(scale, scale * 0.6, 1);
-      sprite.position.set(
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 30,
-        -Math.random() * 260 - 20
-      );
-      scene.add(sprite);
-      clouds.push(sprite);
-    }
-
-    const cityGroup = new THREE.Group();
-    const buildingMat = new THREE.MeshLambertMaterial({ color: 0x223449 });
-    const snowMat = new THREE.MeshLambertMaterial({ color: 0xf3f9fc });
-    const winMat = new THREE.MeshBasicMaterial({ color: 0x6fe3ff });
-
-    const gridSize = 9;
-    const spacing = 9;
-    for (let x = 0; x < gridSize; x++) {
-      for (let z = 0; z < gridSize; z++) {
-        if (Math.random() < 0.25) continue;
-        const h = 4 + Math.random() * 22;
-        const w = 3 + Math.random() * 2;
-        const bx = (x - gridSize / 2) * spacing + (Math.random() - 0.5) * 2;
-        const bz = (z - gridSize / 2) * spacing + (Math.random() - 0.5) * 2;
-
-        const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), buildingMat);
-        building.position.set(bx, h / 2, bz);
-        cityGroup.add(building);
-
-        const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 1.05, 0.4, w * 1.05), snowMat);
-        cap.position.set(bx, h + 0.2, bz);
-        cityGroup.add(cap);
-
-        if (Math.random() < 0.5) {
-          const win = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), winMat);
-          win.position.set(bx + w / 2 + 0.03, h * (0.3 + Math.random() * 0.5), bz);
-          cityGroup.add(win);
+    const draw = () => {
+      ctx.fillStyle = "rgba(20,20,22,0.09)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `${fontSize}px monospace`;
+      for (let i = 0; i < cols; i++) {
+        const y = drops[i] * fontSize;
+        if (y > 0) {
+          ctx.fillStyle = Math.random() > 0.97 ? T.pink : T.accent;
+          ctx.fillText(Math.random() > 0.5 ? "1" : "0", i * fontSize, y);
+        }
+        if (y > h && Math.random() > 0.975) {
+          drops[i] = 0;
+        } else {
+          drops[i] += 1;
         }
       }
+    };
+
+    const loop = (t: number) => {
+      frameId = requestAnimationFrame(loop);
+      if (t - last < 45) return; // ~22 frames a second keeps it light
+      last = t;
+      draw();
+    };
+
+    setup();
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      for (let n = 0; n < 150; n++) draw();
+    } else {
+      frameId = requestAnimationFrame(loop);
     }
-    cityGroup.position.set(14, 0, -240);
-    scene.add(cityGroup);
 
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(400, 400),
-      new THREE.MeshLambertMaterial({ color: 0x121b28 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, 0, -200);
-    scene.add(ground);
-
-    let frameId;
-    const start = performance.now();
-    const flightDuration = 7000;
-    const startZ = 40;
-    const endZ = -190;
-    const ease = (t) => 1 - Math.pow(1 - t, 3);
-
-    const animate = (now) => {
-      const elapsed = now - start;
-      const t = Math.min(elapsed / flightDuration, 1);
-      const eased = ease(t);
-      camera.position.z = startZ + (endZ - startZ) * eased;
-      camera.position.y = 4 + Math.sin(elapsed * 0.0002) * 1.5;
-      scene.fog.density = 0.012 - eased * 0.009;
-
-      if (t >= 1) {
-        camera.position.x = 10 + Math.sin(elapsed * 0.00015) * 3;
-      }
-
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    };
-    frameId = requestAnimationFrame(animate);
-
-    const handleResize = () => {
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", handleResize);
-
+    window.addEventListener("resize", setup);
     return () => {
       cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", handleResize);
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      window.removeEventListener("resize", setup);
     };
   }, []);
 
   return (
-    <div
-      ref={mountRef}
-      style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.75 }}
+    <canvas
+      ref={ref}
       aria-hidden="true"
+      style={{ position: "fixed", top: 0, left: 0, zIndex: 0, pointerEvents: "none", opacity: RAIN_OPACITY }}
     />
   );
 }
 
-function Divider({ inset }: any) {
+/* ================= PUBLIC SITE ================= */
+
+const SERVICES = ["Brochure Website", "Booking & Payments Website", "Digital Portfolio", "Not sure yet"];
+
+const PACKAGES = [
+  {
+    service: "Brochure Website",
+    prefix: "From ",
+    price: "R1,500",
+    big: true,
+    blurb: "A clean online presence so customers can find you and contact you.",
+    items: ["3–5 pages", "Mobile-friendly design", "Contact form so customers can reach you", "Your contact details and business info"],
+  },
+  {
+    service: "Booking & Payments Website",
+    prefix: "",
+    price: "R3,500",
+    big: true,
+    blurb: "For businesses that want customers to book and pay online.",
+    items: ["Online booking feature", "Online payment feature", "Contact form so customers can reach you", "Mobile-friendly design"],
+  },
+  {
+    service: "Digital Portfolio",
+    prefix: "",
+    price: "Custom quote",
+    big: false,
+    blurb: "Show your work, projects or CV online in one place you can share.",
+    items: ["Showcase your work and projects", "Mobile-friendly design", "One link to share with clients or employers"],
+  },
+];
+
+// Edit this list: add live links in url, and remove anything that isn't finished or the owner hasn't agreed to.
+const PROJECTS = [
+  { name: "Briis Best Bakes", type: "Home bakery site with a photo gallery of cakes, muffins and custom bakes", url: "" },
+  { name: "Cynosure Wig Atelier", type: "Wig installation services and price list", url: "" },
+  { name: "Mvuni's Digital Portfolio", type: "Portfolio website for a web developer", url: "https://k3vin11-beep.github.io/personal-portfolio/" },
+  { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "" },
+  { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
+  { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
+  { name : "Ndzalo's Digital Portfolio", type: "Portfolio website for a Actuary", url: "" },
+];
+
+const COMING_SOON = [
+  { name: "Full-stack web applications", blurb: "Custom web apps with logins, databases and dashboards built around how your business works." },
+  { name: "IT admin systems", blurb: "Internal tools to manage your staff, stock, bookings and records in one place." },
+];
+
+const STEPS = [
+  { n: "01", t: "Send us a message", c: "Tell us about your business and what you need using the form." },
+  { n: "02", t: "We build it", c: "We design and build your website." },
+  { n: "03", t: "Go live", c: "Your site goes online and customers can start finding you." },
+];
+
+function PackageCard({ pkg, onPick }: any) {
   return (
-    <div
-      style={{
-        height: 1,
-        background: T.line,
-        margin: inset ? `0 ${inset}` : 0,
-      }}
-    />
-  );
-}
-
-/* ---------- nav ---------- */
-const PAGES = ["Home", "About", "Services", "Portfolio", "Contact"];
-
-function Nav({ page, setPage }: any) {
-  const [open, setOpen] = useState(false);
-  return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        background: "rgba(10,14,23,0.92)",
-        backdropFilter: "blur(6px)",
-        borderBottom: `1px solid ${T.line}`,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "18px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <button
-          onClick={() => {
-            setPage("Home");
-            setOpen(false);
-          }}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: 0,
-          }}
-        >
-          <span
-            style={{
-              width: 9,
-              height: 9,
-              background: T.accent,
-              display: "inline-block",
-              transform: "rotate(45deg)",
-            }}
-          />
-          <span
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 600,
-              fontSize: 19,
-              letterSpacing: "0.01em",
-              color: T.text,
-            }}
-          >
-            ICETECH
-          </span>
-        </button>
-
-        <nav style={{ display: "flex", gap: 4 }} className="icetech-nav-desktop">
-          {PAGES.map((p) => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "8px 14px",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 14,
-                color: page === p ? T.text : T.textDim,
-                borderBottom: page === p ? `1px solid ${T.accent}` : "1px solid transparent",
-                transition: "color 0.15s ease",
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </nav>
-
-        <button
-          onClick={() => setPage("Contact")}
-          className="icetech-nav-desktop"
-          style={{
-            background: "none",
-            border: `1px solid ${T.accent}`,
-            color: T.accent,
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: 13.5,
-            padding: "9px 16px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          Start a project <ArrowRight size={14} />
-        </button>
-
-        <button
-          onClick={() => setOpen(!open)}
-          className="icetech-nav-mobile"
-          style={{ background: "none", border: "none", color: T.text, cursor: "pointer" }}
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+    <div className="card" style={{ padding: 26, display: "flex", flexDirection: "column" }}>
+      <h3 style={{ fontSize: 24 }}>{pkg.service}</h3>
+      <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: "10px 0 16px" }}>{pkg.blurb}</p>
+      <div style={{ marginBottom: 18 }}>
+        <span style={{ color: T.dim, fontSize: 14 }}>{pkg.prefix}</span>
+        <span style={{ fontFamily: "'Anton', sans-serif", fontSize: pkg.big ? 44 : 30, color: T.accent }}>{pkg.price}</span>
       </div>
-
-      {open && (
-        <div
-          className="icetech-nav-mobile"
-          style={{ borderTop: `1px solid ${T.line}`, padding: "8px 24px 18px" }}
-        >
-          {PAGES.map((p) => (
-            <button
-              key={p}
-              onClick={() => {
-                setPage(p);
-                setOpen(false);
-              }}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                background: "none",
-                border: "none",
-                padding: "10px 0",
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 15,
-                color: page === p ? T.accent : T.textDim,
-                cursor: "pointer",
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <style>{`
-        @media (max-width: 720px) {
-          .icetech-nav-desktop { display: none !important; }
-          .icetech-nav-mobile { display: block !important; }
-        }
-        @media (min-width: 721px) {
-          .icetech-nav-mobile { display: none !important; }
-        }
-      `}</style>
-    </header>
-  );
-}
-
-/* ---------- shared page shell ---------- */
-function Section({ children, style }: any) {
-  return (
-    <section style={{ maxWidth: 1100, margin: "0 auto", padding: "72px 24px", ...style }}>
-      {children}
-    </section>
-  );
-}
-
-function Eyebrow({ children }: any) {
-  return (
-    <p
-      style={{
-        fontFamily: "'IBM Plex Sans', sans-serif",
-        fontSize: 13,
-        color: T.accent,
-        marginBottom: 14,
-        letterSpacing: "0.02em",
-      }}
-    >
-      {children}
-    </p>
-  );
-}
-
-/* ---------- Home ---------- */
-function Home({ setPage }: any) {
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setRevealed(true), 80);
-    return () => clearTimeout(t);
-  }, []);
-
-  const capabilities = [
-    {
-      icon: Code2,
-      title: "Frontend engineering",
-      copy: "Interfaces built with React, vanilla JS, or plain HTML and CSS — fast to load, easy to hand off.",
-    },
-    {
-      icon: Server,
-      title: "Backend and APIs",
-      copy: "PHP and Python services, databases, and integrations that keep your data straight under real traffic.",
-    },
-    {
-      icon: Cloud,
-      title: "Cloud infrastructure",
-      copy: "Deployment, scaling, and hosting set up so your site stays up when it matters most.",
-    },
-    {
-      icon: LifeBuoy,
-      title: "Ongoing support",
-      copy: "Fixes, updates, and small changes handled on a schedule you can plan around, not a queue you wait in.",
-    },
-  ];
-
-  const process = [
-    { n: "01", t: "Discover", c: "We map what the site needs to do before anyone touches a design tool." },
-    { n: "02", t: "Design", c: "Wireframes and a visual direction you sign off on before we build anything." },
-    { n: "03", t: "Build", c: "Development in short cycles, with something you can click on within the first week." },
-    { n: "04", t: "Ship", c: "Testing, launch, and a handover doc that explains how everything works." },
-    { n: "05", t: "Support", c: "A maintenance window for fixes and updates once the site is live." },
-  ];
-
-  return (
-    <>
-      {/* hero */}
-      <div style={{ position: "relative", overflow: "hidden", borderBottom: `1px solid ${T.line}` }}>
-        <CloudCity />
-        <Fracture style={{ right: -60, top: -40, width: 340, height: 340 }} opacity={0.35} />
-        <Section style={{ paddingTop: 96, paddingBottom: 96, position: "relative" }}>
-          <div style={{ maxWidth: 620 }}>
-            <Eyebrow>Web development studio</Eyebrow>
-            <h1
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 600,
-                fontSize: "clamp(34px, 5vw, 54px)",
-                lineHeight: 1.08,
-                color: T.text,
-                margin: 0,
-                overflow: "hidden",
-              }}
-            >
-              <span
-                style={{
-                  display: "block",
-                  transform: revealed ? "translateY(0)" : "translateY(110%)",
-                  transition: "transform 0.6s cubic-bezier(0.22,1,0.36,1)",
-                }}
-              >
-                We build web systems
-              </span>
-              <span
-                style={{
-                  display: "block",
-                  color: T.accent,
-                  transform: revealed ? "translateY(0)" : "translateY(110%)",
-                  transition: "transform 0.6s cubic-bezier(0.22,1,0.36,1) 0.08s",
-                }}
-              >
-                that hold up under load.
-              </span>
-            </h1>
-            <p
-              style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 16.5,
-                lineHeight: 1.65,
-                color: T.textDim,
-                marginTop: 22,
-                maxWidth: 480,
-              }}
-            >
-              ICETECH designs and ships production-grade websites, applications, and internal tools
-              for teams who can't afford downtime.
-            </p>
-            <div style={{ display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap" }}>
-              <button
-                onClick={() => setPage("Contact")}
-                style={{
-                  background: T.accent,
-                  color: "#04222B",
-                  border: "none",
-                  padding: "13px 22px",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                Start a project <ArrowRight size={16} />
-              </button>
-              <button
-                onClick={() => setPage("Portfolio")}
-                style={{
-                  background: "none",
-                  color: T.text,
-                  border: `1px solid ${T.line}`,
-                  padding: "13px 22px",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 14.5,
-                  cursor: "pointer",
-                }}
-              >
-                See our work
-              </button>
-            </div>
-          </div>
-        </Section>
-      </div>
-
-      {/* capabilities strip */}
-      <Section style={{ paddingTop: 64, paddingBottom: 64 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))" }}>
-          {capabilities.map((c, i) => (
-            <div
-              key={c.title}
-              style={{
-                padding: "24px 22px",
-                borderTop: `1px solid ${T.line}`,
-                borderLeft: i % 2 === 1 ? `1px solid ${T.line}` : "none",
-              }}
-            >
-              <c.icon size={20} color={T.accent} strokeWidth={1.6} />
-              <h3
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 16.5,
-                  fontWeight: 600,
-                  color: T.text,
-                  margin: "14px 0 8px",
-                }}
-              >
-                {c.title}
-              </h3>
-              <p
-                style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  color: T.textDim,
-                  margin: 0,
-                }}
-              >
-                {c.copy}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* process */}
-      <div style={{ borderTop: `1px solid ${T.line}`, background: T.panelAlt }}>
-        <Section>
-          <Eyebrow>How a project runs</Eyebrow>
-          <h2
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 600,
-              fontSize: 28,
-              color: T.text,
-              margin: "0 0 40px",
-              maxWidth: 480,
-            }}
-          >
-            Five stages, start to launch
-          </h2>
-          <div>
-            {process.map((p, i) => (
-              <div key={p.n}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "60px 1fr",
-                    gap: 20,
-                    padding: "22px 0",
-                    alignItems: "start",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: 14,
-                      color: T.accentDim,
-                    }}
-                  >
-                    {p.n}
-                  </span>
-                  <div>
-                    <h4
-                      style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: 17,
-                        fontWeight: 600,
-                        color: T.text,
-                        margin: "0 0 6px",
-                      }}
-                    >
-                      {p.t}
-                    </h4>
-                    <p
-                      style={{
-                        fontFamily: "'IBM Plex Sans', sans-serif",
-                        fontSize: 14.5,
-                        color: T.textDim,
-                        margin: 0,
-                        maxWidth: 560,
-                      }}
-                    >
-                      {p.c}
-                    </p>
-                  </div>
-                </div>
-                {i < process.length - 1 && <Divider />}
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
-    </>
-  );
-}
-
-/* ---------- About ---------- */
-function About() {
-  const stats = [
-    { n: "40+", l: "sites shipped" },
-    { n: "5", l: "years building" },
-    { n: "12", l: "active clients" },
-    { n: "98%", l: "on-time launches" },
-  ];
-  return (
-    <Section>
-      <div style={{ maxWidth: 640 }}>
-        <Eyebrow>About ICETECH</Eyebrow>
-        <h1
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 600,
-            fontSize: "clamp(28px, 4vw, 40px)",
-            color: T.text,
-            margin: "0 0 22px",
-            lineHeight: 1.15,
-          }}
-        >
-          Small studio, direct line to the people building your site.
-        </h1>
-        <p
-          style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: 16,
-            lineHeight: 1.7,
-            color: T.textDim,
-            margin: "0 0 18px",
-          }}
-        >
-          ICETECH started as a one-person freelance practice and grew into a small studio because
-          clients kept asking for the same thing: someone who writes the code, answers the phone,
-          and doesn't disappear after launch. We still work that way.
-        </p>
-        <p
-          style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: 16,
-            lineHeight: 1.7,
-            color: T.textDim,
-            margin: 0,
-          }}
-        >
-          We take on a small number of projects at a time so every client gets a developer who
-          knows their codebase by name, not a ticket number in a queue.
-        </p>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 1,
-          background: T.line,
-          marginTop: 56,
-          border: `1px solid ${T.line}`,
-        }}
-      >
-        {stats.map((s) => (
-          <div key={s.l} style={{ background: T.bg, padding: "26px 20px" }}>
-            <div
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 30,
-                fontWeight: 600,
-                color: T.accent,
-              }}
-            >
-              {s.n}
-            </div>
-            <div
-              style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 13.5,
-                color: T.textDim,
-                marginTop: 4,
-              }}
-            >
-              {s.l}
-            </div>
-          </div>
+      <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+        {pkg.items.map((item: string) => (
+          <li key={item} style={{ fontSize: 14.5, lineHeight: 1.5, padding: "5px 0" }}>
+            <span style={{ color: T.pink, marginRight: 10 }}>✓</span>
+            {item}
+          </li>
         ))}
-      </div>
-    </Section>
+      </ul>
+      <a className="btn btn-primary" href="#contact" onClick={() => onPick(pkg.service)} style={{ textAlign: "center" }}>
+        {pkg.big ? "Get this package" : "Ask for a quote"}
+      </a>
+    </div>
   );
 }
 
-/* ---------- Services ---------- */
-function Services({ setPage }: any) {
-  const services = [
-    {
-      icon: Code2,
-      title: "Web design and build",
-      copy: "A new site from scratch — structure, visual design, and front-end build in one pass, using HTML, CSS, JavaScript, or React depending on what the project needs.",
-    },
-    {
-      icon: Server,
-      title: "Full-stack development",
-      copy: "Custom web applications with PHP or Python back ends, database design, and the APIs that connect them to your front end.",
-    },
-    {
-      icon: ExternalLink,
-      title: "E-commerce",
-      copy: "Storefronts wired up to payment processing, inventory, and order handling — built to survive a traffic spike on launch day.",
-    },
-    {
-      icon: Cloud,
-      title: "Cloud and DevOps",
-      copy: "Hosting setup, deployment pipelines, and infrastructure on AWS or similar platforms, sized to what your site actually needs.",
-    },
-    {
-      icon: LifeBuoy,
-      title: "Maintenance and support",
-      copy: "A standing arrangement for updates, bug fixes, and small feature requests after launch, billed monthly or per request.",
-    },
-  ];
-  return (
-    <Section>
-      <Eyebrow>What we do</Eyebrow>
-      <h1
-        style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 600,
-          fontSize: "clamp(28px, 4vw, 40px)",
-          color: T.text,
-          margin: "0 0 48px",
-          maxWidth: 560,
-        }}
-      >
-        Services, scoped to what your project needs
-      </h1>
-
-      <div>
-        {services.map((s, i) => (
-          <div key={s.title}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "44px 1fr",
-                gap: 24,
-                padding: "28px 0",
-                alignItems: "start",
-              }}
-            >
-              <s.icon size={22} color={T.accent} strokeWidth={1.6} />
-              <div>
-                <h3
-                  style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: 19,
-                    fontWeight: 600,
-                    color: T.text,
-                    margin: "0 0 8px",
-                  }}
-                >
-                  {s.title}
-                </h3>
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    fontSize: 15,
-                    lineHeight: 1.65,
-                    color: T.textDim,
-                    margin: 0,
-                    maxWidth: 620,
-                  }}
-                >
-                  {s.copy}
-                </p>
-              </div>
-            </div>
-            {i < services.length - 1 && <Divider />}
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => setPage("Contact")}
-        style={{
-          marginTop: 40,
-          background: T.accent,
-          color: "#04222B",
-          border: "none",
-          padding: "13px 22px",
-          fontFamily: "'IBM Plex Sans', sans-serif",
-          fontWeight: 600,
-          fontSize: 14.5,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        Ask about a project <ArrowRight size={16} />
-      </button>
-    </Section>
-  );
-}
-
-/* ---------- Portfolio ---------- */
-function Portfolio() {
-  const projects = [
-    { name: "Kelder Logistics", type: "Internal ops dashboard", stack: "React · PHP · MySQL" },
-    { name: "Rivermark Realty", type: "Marketing site + listings", stack: "HTML/CSS · JS" },
-    { name: "Pantry & Co.", type: "E-commerce storefront", stack: "React · Python · Stripe" },
-    { name: "Fieldnote", type: "Field-report web app", stack: "React · Node · Postgres" },
-    { name: "Glassworks Studio", type: "Portfolio + booking", stack: "HTML/CSS · JS" },
-    { name: "Northline Freight", type: "Cloud migration", stack: "AWS · PHP" },
-  ];
-  return (
-    <Section>
-      <Eyebrow>Selected work</Eyebrow>
-      <h1
-        style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 600,
-          fontSize: "clamp(28px, 4vw, 40px)",
-          color: T.text,
-          margin: "0 0 48px",
-          maxWidth: 560,
-        }}
-      >
-        Projects we've shipped
-      </h1>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 1,
-          background: T.line,
-          border: `1px solid ${T.line}`,
-        }}
-      >
-        {projects.map((p) => (
-          <div
-            key={p.name}
-            style={{
-              background: T.bg,
-              padding: "26px 24px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: 150,
-            }}
-          >
-            <div>
-              <h3
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 17,
-                  fontWeight: 600,
-                  color: T.text,
-                  margin: "0 0 6px",
-                }}
-              >
-                {p.name}
-              </h3>
-              <p
-                style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 14,
-                  color: T.textDim,
-                  margin: 0,
-                }}
-              >
-                {p.type}
-              </p>
-            </div>
-            <p
-              style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: 12.5,
-                color: T.accentDim,
-                marginTop: 18,
-                letterSpacing: "0.01em",
-              }}
-            >
-              {p.stack}
-            </p>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
-}
-
-/* ---------- Contact ---------- */
-function Contact() {
+function ContactForm({ service, setService }: any) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [sent, setSent] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [waUrl, setWaUrl] = useState("");
 
-  const submit = async (e) => {
+  const submit = async (e: any) => {
     e.preventDefault();
-    setSending(true);
-    setError(false);
+    const text = `Hi ICETECH, I'm ${form.name}.\nI'm interested in: ${service}.\n\n${form.message}\n\nMy email: ${form.email}`;
+    const url = waLink(text);
+    setWaUrl(url);
+    // open the WhatsApp chat straight away so the browser doesn't block it
+    window.open(url, "_blank", "noopener,noreferrer");
+    setStatus("sending");
+    if (!EMAIL_ENABLED) {
+      setStatus("error");
+      return;
+    }
     try {
       const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          access_key: "PASTE_YOUR_ACCESS_KEY_HERE",
-          subject: `New project inquiry from ${form.name}`,
+          access_key: WEB3FORMS_KEY,
+          subject: `New ICETECH enquiry from ${form.name}`,
+          from_name: "ICETECH website",
           name: form.name,
           email: form.email,
+          service,
           message: form.message,
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        setSent(true);
-      } else {
-        setError(true);
-      }
+      setStatus(data.success ? "sent" : "error");
     } catch (err) {
-      setError(true);
-    } finally {
-      setSending(false);
+      setStatus("error");
     }
   };
+
+  const field = {
+    width: "100%",
+    background: T.panel,
+    border: `2px solid ${T.line}`,
+    color: T.text,
+    padding: "12px 14px",
+    fontFamily: "inherit",
+    fontSize: 15,
+  };
+  const label = { display: "block", color: T.dim, fontSize: 13.5, margin: "0 0 6px" };
+
+  if (status === "sent" || status === "error") {
+    return (
+      <div className="card" style={{ padding: 28 }}>
+        <h3 style={{ fontSize: 26, marginBottom: 12 }}>{status === "sent" ? "Message sent" : "One more step"}</h3>
+        {status === "sent" ? (
+          <p style={{ color: T.dim, lineHeight: 1.6, margin: "0 0 18px" }}>
+            Thanks {form.name}, we've got your message by email. WhatsApp should have opened with it ready to go. Press send there so it reaches our chat too.
+          </p>
+        ) : (
+          <p style={{ color: T.dim, lineHeight: 1.6, margin: "0 0 18px" }}>
+            Your WhatsApp chat should be open. Press send there. We couldn't send the email copy, so please also email us at{" "}
+            <a href={`mailto:${BUSINESS_EMAIL}`} style={{ color: T.accent }}>{BUSINESS_EMAIL}</a>.
+          </p>
+        )}
+        <a className="btn btn-primary" href={waUrl} target="_blank" rel="noopener noreferrer">Open WhatsApp</a>
+      </div>
+    );
+  }
+
+  return (
+    <form className="card" onSubmit={submit} style={{ padding: 28 }}>
+      <div style={{ marginBottom: 16 }}>
+        <label style={label} htmlFor="cf-name">Your name</label>
+        <input id="cf-name" style={field} value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} required />
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={label} htmlFor="cf-email">Your email</label>
+        <input id="cf-email" type="email" style={field} value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} required />
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={label} htmlFor="cf-service">What do you need?</label>
+        <select id="cf-service" style={field} value={service} onChange={(e: any) => setService(e.target.value)}>
+          {SERVICES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <label style={label} htmlFor="cf-message">Tell us about your business</label>
+        <textarea id="cf-message" style={{ ...field, minHeight: 110, resize: "vertical" }} value={form.message} onChange={(e: any) => setForm({ ...form, message: e.target.value })} required />
+      </div>
+      <button className="btn btn-primary" type="submit" disabled={status === "sending"}>
+        {status === "sending" ? "Sending..." : "Send message"}
+      </button>
+      <p style={{ color: T.dim, fontSize: 12.5, margin: "14px 0 0", lineHeight: 1.5 }}>
+        We'll email your message to ICETECH and open WhatsApp with it ready to send.
+      </p>
+    </form>
+  );
+}
+
+function Site() {
+  const [service, setService] = useState(SERVICES[3]);
+
+  return (
+    <>
+      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(20,20,22,0.9)", backdropFilter: "blur(6px)", borderBottom: `2px solid ${T.line}` }}>
+        <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px" }}>
+          <a href="#home" style={{ textDecoration: "none", color: T.text, fontFamily: "'Anton', sans-serif", fontSize: 24, letterSpacing: "0.02em" }}>
+            <span style={{ color: T.accent }}>&gt;_</span> ICETECH
+          </a>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <nav className="nav-links">
+              <a className="nav-link" href="#services">Services</a>
+              <a className="nav-link" href="#work">Our work</a>
+              <a className="nav-link" href="#soon">Coming soon</a>
+              <a className="nav-link" href="#contact">Contact</a>
+            </nav>
+            <a className="btn btn-primary" href="#contact" style={{ padding: "8px 16px", fontSize: 14 }}>Get a quote</a>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section id="home" style={{ position: "relative", overflow: "hidden", borderBottom: `2px solid ${T.line}` }}>
+          <div className="splat" aria-hidden="true" />
+          <div className="wrap" style={{ padding: "96px 24px 88px", position: "relative" }}>
+            <div className="tag" style={{ fontSize: 22, marginBottom: 14 }}>web design for small businesses</div>
+            <h1 style={{ fontSize: "clamp(42px, 8vw, 84px)", lineHeight: 1.02, maxWidth: 760, textShadow: "0 2px 14px #000" }}>
+              Professional websites for your business, <span className="marker" style={{ color: T.accent }}>from R1,500.</span>
+            </h1>
+            <p style={{ color: T.text, opacity: 0.85, fontSize: 17, lineHeight: 1.65, maxWidth: 540, margin: "24px 0 32px", textShadow: "0 1px 8px #000" }}>
+              ICETECH builds websites, booking and payment sites, and digital portfolios for small businesses in Pretoria.
+            </p>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+              <a className="btn btn-primary" href="#contact">Get a quote</a>
+              <a className="btn btn-ghost" href="#work">See our work</a>
+            </div>
+          </div>
+        </section>
+
+        <section id="services">
+          <div className="wrap" style={{ padding: "72px 24px" }}>
+            <h2 style={{ fontSize: 40 }}>What we build</h2>
+            <p style={{ color: T.dim, fontSize: 16, margin: "10px 0 36px" }}>Simple, upfront pricing.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+              {PACKAGES.map((pkg) => (
+                <PackageCard key={pkg.service} pkg={pkg} onPick={setService} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="work" style={{ background: "rgba(20,20,22,0.82)", borderTop: `2px solid ${T.line}`, borderBottom: `2px solid ${T.line}` }}>
+          <div className="wrap" style={{ padding: "72px 24px" }}>
+            <h2 style={{ fontSize: 40 }}>Our work</h2>
+            <p style={{ color: T.dim, fontSize: 16, margin: "10px 0 36px" }}>Some of the sites we've built.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+              {PROJECTS.map((p, i) => (
+                <div key={p.name} className="card" style={{ padding: 24 }}>
+                  <div className="tag" style={{ fontSize: 20, marginBottom: 6 }}>0{i + 1}</div>
+                  <h3 style={{ fontSize: 24, marginBottom: 8 }}>{p.name}</h3>
+                  <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{p.type}</p>
+                  {p.url && (
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 14, color: T.accent, fontSize: 14.5 }}>
+                      Visit site →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="soon">
+          <div className="wrap" style={{ padding: "72px 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginBottom: 36 }}>
+              <h2 style={{ fontSize: 40 }}>Coming soon</h2>
+              <span className="sticker">upcoming services</span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+              {COMING_SOON.map((s) => (
+                <div key={s.name} className="card" style={{ padding: 26, borderStyle: "dashed" }}>
+                  <h3 style={{ fontSize: 24, marginBottom: 8 }}>{s.name}</h3>
+                  <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{s.blurb}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="how" style={{ background: "rgba(20,20,22,0.82)", borderTop: `2px solid ${T.line}`, borderBottom: `2px solid ${T.line}` }}>
+          <div className="wrap" style={{ padding: "72px 24px" }}>
+            <h2 style={{ fontSize: 40, marginBottom: 36 }}>How it works</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 28 }}>
+              {STEPS.map((s) => (
+                <div key={s.n}>
+                  <div className="tag" style={{ fontSize: 24, marginBottom: 6 }}>{s.n}</div>
+                  <h3 style={{ fontSize: 22, marginBottom: 6 }}>{s.t}</h3>
+                  <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{s.c}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="contact">
+          <div className="wrap" style={{ padding: "72px 24px 88px" }}>
+            <div className="contact-grid">
+              <div>
+                <h2 style={{ fontSize: 40 }}>Get a quote</h2>
+                <p style={{ color: T.dim, fontSize: 16, lineHeight: 1.65, margin: "14px 0 24px", maxWidth: 380 }}>
+                  Tell us about your business and what you need. We'll get back to you.
+                </p>
+                <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.8, margin: 0 }}>
+                  Email: <a href={`mailto:${BUSINESS_EMAIL}`} style={{ color: T.accent }}>{BUSINESS_EMAIL}</a>
+                  <br />
+                  Pretoria, South Africa
+                </p>
+              </div>
+              <ContactForm service={service} setService={setService} />
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer style={{ borderTop: `2px solid ${T.line}`, background: "rgba(20,20,22,0.9)" }}>
+        <div className="wrap" style={{ padding: 24, color: T.dim, fontSize: 13.5 }}>
+          © {new Date().getFullYear()} ICETECH. All rights reserved.
+        </div>
+      </footer>
+    </>
+  );
+}
+
+/* ================= ADMIN VIEW (open the site with #admin on the end) ================= */
+
+function Stat({ label, value, sub }: any) {
+  return (
+    <div className="card" style={{ padding: "20px 18px" }}>
+      <div style={{ color: T.dim, fontSize: 13.5 }}>{label}</div>
+      <div style={{ fontFamily: "'Anton', sans-serif", fontSize: 44, color: T.accent, margin: "4px 0 2px" }}>{value}</div>
+      <div style={{ color: T.dim, fontSize: 12.5 }}>{sub}</div>
+    </div>
+  );
+}
+
+const dayKey = (offset: number) =>
+  new Date(Date.now() - offset * 86400000).toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
+
+const dayLabel = (k: string) =>
+  new Date(`${k}T12:00:00`).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
+
+function Admin() {
+  const [token, setToken] = useState<any>(() => {
+    try {
+      return sessionStorage.getItem("icetech_token");
+    } catch (e) {
+      return null;
+    }
+  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [rows, setRows] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  const login = async (e: any) => {
+    e.preventDefault();
+    setLoggingIn(true);
+    setLoginError("");
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: sbHeaders(),
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.access_token) {
+        sessionStorage.setItem("icetech_token", data.access_token);
+        localStorage.setItem("icetech_is_admin", "1");
+        setToken(data.access_token);
+        setPassword("");
+      } else {
+        setLoginError("Wrong email or password.");
+      }
+    } catch (err) {
+      setLoginError("Couldn't reach the server. Try again.");
+    }
+    setLoggingIn(false);
+  };
+
+  const loadStats = useCallback(async () => {
+    setLoadError("");
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/daily_stats`, {
+        method: "POST",
+        headers: sbHeaders(token),
+        body: JSON.stringify({ days: 30 }),
+      });
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("icetech_token");
+        setToken(null);
+        setLoginError("Session expired. Please log in again.");
+        return;
+      }
+      const data = await res.json();
+      setRows(Array.isArray(data) ? data : []);
+      setLoaded(true);
+    } catch (err) {
+      setLoadError("Couldn't load the numbers. Try refreshing.");
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (token) loadStats();
+  }, [token, loadStats]);
+
+  const logout = () => {
+    sessionStorage.removeItem("icetech_token");
+    setToken(null);
+    setRows([]);
+    setLoaded(false);
+  };
+
+  const byDay: any = {};
+  rows.forEach((r: any) => {
+    byDay[r.day] = r;
+  });
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const k = dayKey(i);
+    const r = byDay[k];
+    return { day: k, visitors: r ? Number(r.visitors) : 0, visits: r ? Number(r.visits) : 0 };
+  });
+  const last7 = days.slice(0, 7).reduce((sum, d) => sum + d.visitors, 0);
+  const total30 = rows.reduce((sum: number, r: any) => sum + Number(r.visits), 0);
+  const maxV = Math.max(1, ...days.map((d) => d.visitors));
 
   const inputStyle = {
     width: "100%",
     background: T.panel,
-    border: `1px solid ${T.line}`,
+    border: `2px solid ${T.line}`,
     color: T.text,
     padding: "12px 14px",
-    fontFamily: "'IBM Plex Sans', sans-serif",
-    fontSize: 14.5,
-    outline: "none",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    fontFamily: "'IBM Plex Sans', sans-serif",
-    fontSize: 13,
-    color: T.textDim,
-    display: "block",
-    marginBottom: 6,
+    fontFamily: "inherit",
+    fontSize: 15,
+    marginBottom: 14,
   };
 
   return (
-    <Section>
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 56 }} className="icetech-contact-grid">
-        <div>
-          <Eyebrow>Get in touch</Eyebrow>
-          <h1
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 600,
-              fontSize: "clamp(28px, 4vw, 38px)",
-              color: T.text,
-              margin: "0 0 20px",
-              lineHeight: 1.15,
-            }}
-          >
-            Tell us what you're building.
-          </h1>
-          <p
-            style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              fontSize: 15.5,
-              lineHeight: 1.65,
-              color: T.textDim,
-              margin: "0 0 36px",
-              maxWidth: 420,
-            }}
-          >
-            Send a few lines about the project and we'll reply within one business day with next
-            steps.
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Mail size={17} color={T.accent} />
-              <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, color: T.text }}>
-                icetech.webdev@gmail.com
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Phone size={17} color={T.accent} />
-              <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, color: T.text }}>
-                +27 (0)12 555 0134
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <MapPin size={17} color={T.accent} />
-              <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 14.5, color: T.text }}>
-                Arcadia, Pretoria, South Africa
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ position: "relative" }}>
-          <Fracture style={{ top: -30, right: -30, width: 180, height: 180 }} opacity={0.25} />
-          {sent ? (
-            <div
-              style={{
-                border: `1px solid ${T.line}`,
-                padding: "40px 28px",
-                position: "relative",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 18,
-                  color: T.text,
-                  margin: "0 0 8px",
-                }}
-              >
-                Message sent
-              </p>
-              <p
-                style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 14,
-                  color: T.textDim,
-                  margin: 0,
-                }}
-              >
-                We'll get back to you within one business day.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={submit} style={{ position: "relative" }}>
-              <div style={{ marginBottom: 18 }}>
-                <label style={labelStyle}>Name</label>
-                <input
-                  style={inputStyle}
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Your name"
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: 18 }}>
-                <label style={labelStyle}>Email</label>
-                <input
-                  type="email"
-                  style={inputStyle}
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@company.com"
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: 22 }}>
-                <label style={labelStyle}>Project details</label>
-                <textarea
-                  style={{ ...inputStyle, resize: "vertical", minHeight: 110, fontFamily: "'IBM Plex Sans', sans-serif" }}
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  placeholder="What are you building, and when do you need it?"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={sending}
-                style={{
-                  background: T.accent,
-                  color: "#04222B",
-                  border: "none",
-                  padding: "13px 22px",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontWeight: 600,
-                  fontSize: 14.5,
-                  cursor: sending ? "default" : "pointer",
-                  opacity: sending ? 0.6 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                {sending ? "Sending..." : "Send message"} <ArrowRight size={16} />
-              </button>
-              {error && (
-                <p
-                  style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                    fontSize: 13.5,
-                    color: "#ff8080",
-                    marginTop: 14,
-                  }}
-                >
-                  Something went wrong sending that. Try again, or email us directly.
-                </p>
-              )}
-            </form>
+    <div className="wrap" style={{ padding: "32px 24px 64px", minHeight: "100vh" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+        <h1 style={{ fontSize: 34 }}>ICETECH Admin</h1>
+        <div style={{ display: "flex", gap: 10 }}>
+          {token && (
+            <>
+              <button className="btn btn-ghost" onClick={loadStats} style={{ padding: "8px 14px", fontSize: 14 }}>Refresh</button>
+              <button className="btn btn-ghost" onClick={logout} style={{ padding: "8px 14px", fontSize: 14 }}>Log out</button>
+            </>
           )}
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              window.location.hash = "";
+            }}
+            style={{ padding: "8px 14px", fontSize: 14 }}
+          >
+            Back to site
+          </button>
         </div>
       </div>
-      <style>{`
-        @media (max-width: 760px) {
-          .icetech-contact-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </Section>
-  );
-}
 
-/* ---------- Footer ---------- */
-function Footer({ setPage }: any) {
-  return (
-    <footer style={{ borderTop: `1px solid ${T.line}`, background: T.panelAlt }}>
-      <Section style={{ paddingTop: 40, paddingBottom: 40 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  background: T.accent,
-                  display: "inline-block",
-                  transform: "rotate(45deg)",
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontWeight: 600,
-                  fontSize: 15.5,
-                  color: T.text,
-                }}
-              >
-                ICETECH
-              </span>
-            </div>
-            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13, color: T.textFaint, marginTop: 8 }}>
-              Web development studio, Pretoria.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-            {PAGES.map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  fontSize: 13.5,
-                  color: T.textDim,
-                  padding: 0,
-                }}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-        <Divider />
-        <p
-          style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: 12.5,
-            color: T.textFaint,
-            marginTop: 20,
-            marginBottom: 0,
-          }}
-        >
-          © {new Date().getFullYear()} ICETECH. All rights reserved.
+      {!TRACKING_ENABLED && (
+        <p style={{ color: T.dim, lineHeight: 1.6 }}>
+          Visitor tracking isn't set up yet. Add your Supabase URL and key at the top of App.tsx to turn it on.
         </p>
-      </Section>
-    </footer>
+      )}
+
+      {TRACKING_ENABLED && !token && (
+        <form onSubmit={login} style={{ maxWidth: 360 }}>
+          <p style={{ color: T.dim, margin: "0 0 18px" }}>Log in to see your visitor numbers.</p>
+          <input style={inputStyle} type="email" placeholder="Email" autoComplete="username" value={email} onChange={(e: any) => setEmail(e.target.value)} required />
+          <input style={inputStyle} type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={(e: any) => setPassword(e.target.value)} required />
+          <button className="btn btn-primary" type="submit" disabled={loggingIn}>
+            {loggingIn ? "Logging in..." : "Log in"}
+          </button>
+          {loginError && <p style={{ color: "#ff8080", fontSize: 14, marginTop: 14 }}>{loginError}</p>}
+        </form>
+      )}
+
+      {TRACKING_ENABLED && token && (
+        <>
+          {loadError && <p style={{ color: "#ff8080", fontSize: 14 }}>{loadError}</p>}
+          {!loaded && !loadError && <p style={{ color: T.dim }}>Loading...</p>}
+          {loaded && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20, marginBottom: 40 }}>
+                <Stat label="Visitors today" value={days[0].visitors} sub={`${days[0].visits} visits`} />
+                <Stat label="Visitors yesterday" value={days[1].visitors} sub={`${days[1].visits} visits`} />
+                <Stat label="Last 7 days" value={last7} sub="daily visitors added up" />
+                <Stat label="Last 30 days" value={total30} sub="total visits" />
+              </div>
+
+              <h2 style={{ fontSize: 26, marginBottom: 16 }}>Visitors per day (last 14 days)</h2>
+              <div>
+                {days.map((d) => (
+                  <div key={d.day} style={{ display: "grid", gridTemplateColumns: "100px 1fr 40px", gap: 12, alignItems: "center", padding: "7px 0", borderTop: `1px solid ${T.line}` }}>
+                    <span style={{ color: T.dim, fontSize: 13.5 }}>{dayLabel(d.day)}</span>
+                    <div style={{ background: T.panel, height: 10 }}>
+                      <div style={{ width: `${(d.visitors / maxV) * 100}%`, height: 10, background: T.accent }} />
+                    </div>
+                    <span style={{ textAlign: "right", fontSize: 14 }}>{d.visitors}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ color: T.dim, fontSize: 12.5, marginTop: 20, lineHeight: 1.6 }}>
+                A visitor is one device per day. A visit is counted once each time someone opens the site. Days use South African time.
+              </p>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
-/* ---------- app ---------- */
-export default function ICETECHSite() {
-  const [page, setPage] = useState("Home");
+/* ================= APP ================= */
+
+export default function App() {
+  const [isAdmin, setIsAdmin] = useState(window.location.hash === "#admin");
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [page]);
+    const onHash = () => setIsAdmin(window.location.hash === "#admin");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
-  const pages: any = {
-    Home: <Home setPage={setPage} />,
-    About: <About />,
-    Services: <Services setPage={setPage} />,
-    Portfolio: <Portfolio />,
-    Contact: <Contact />,
-  };
+  // count one visit per browser session (skips the admin page and your own logged-in device)
+  useEffect(() => {
+    if (isAdmin || !TRACKING_ENABLED) return;
+    try {
+      if (localStorage.getItem("icetech_is_admin") === "1") return;
+      if (sessionStorage.getItem("icetech_counted")) return;
+      sessionStorage.setItem("icetech_counted", "1");
+      let vid = localStorage.getItem("icetech_vid");
+      if (!vid) {
+        vid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem("icetech_vid", vid);
+      }
+      fetch(`${SUPABASE_URL}/rest/v1/visits`, {
+        method: "POST",
+        headers: { ...sbHeaders(), Prefer: "return=minimal" },
+        body: JSON.stringify({ visitor_id: vid, path: window.location.pathname }),
+      }).catch(() => {});
+    } catch (e) {
+      
+    }
+  }, [isAdmin]);
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh" }}>
-      <style>{fontStack}</style>
-      <Nav page={page} setPage={setPage} />
-      {pages[page]}
-      <Footer setPage={setPage} />
+    <div>
+      <style>{css}</style>
+      <CodeRain />
+      <div className="page">{isAdmin ? <Admin /> : <Site />}</div>
     </div>
   );
 }
