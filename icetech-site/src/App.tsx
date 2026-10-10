@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 
-const WHATSAPP_NUMBER = "0810782998"; 
+const WHATSAPP_NUMBER = "27810782998"; 
 const BUSINESS_EMAIL = "icetech.weddev@gmail.com";
 const WEB3FORMS_KEY = "75d941f3-484f-402f-917d-c865e10dcd4f"; 
 const SUPABASE_URL = "https://gdmskhylzxvkkylimflc.supabase.co";
