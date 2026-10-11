@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 
 const WHATSAPP_NUMBER = "27810782998"; 
-const BUSINESS_EMAIL = "icetech.webdev@gmail.com";
+const BUSINESS_EMAIL = "icetech.weddev@gmail.com";
 const WEB3FORMS_KEY = "75d941f3-484f-402f-917d-c865e10dcd4f";
 const SUPABASE_URL = "https://gdmskhylzxvkkylimflc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_94gWC-3BsfHfb7vc2VKbfg_cMlso0uJ";
 const RAIN_OPACITY = 0.45; 
 const EMAIL_ENABLED = !WEB3FORMS_KEY.startsWith("PASTE");
 const TRACKING_ENABLED = !SUPABASE_URL.startsWith("PASTE");
-
 
 const T = {
   bg: "#141416",
@@ -131,7 +130,7 @@ function CodeRain({ enabled }: any) {
     };
 
     setup();
-   
+    
     const timer = window.setInterval(() => {
       if (!document.hidden) draw();
     }, 50);
@@ -152,59 +151,6 @@ function CodeRain({ enabled }: any) {
     />
   );
 }
-
-
-
-const PACKAGES = [
-  {
-    service: "Brochure Website",
-    short: "Brochure website",
-    prefix: "From ",
-    price: "R1,500",
-    suffix: "",
-    blurb: "A clean online presence with a WhatsApp button so customers can message you instantly.",
-    items: ["3–5 pages", "Mobile-friendly design", "WhatsApp contact button linked to your number", "Your contact details and business info"],
-    turnaround: "2 weeks",
-    timeNote: "",
-    revisions: "2 rounds of changes",
-  },
-  {
-    service: "Booking Website",
-    short: "Booking website",
-    prefix: "",
-    price: "R6,000",
-    suffix: "",
-    blurb: "Let customers book you online instead of going back and forth.",
-    items: ["Online booking feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
-    turnaround: "4 weeks",
-    timeNote: "",
-    revisions: "3 rounds of changes",
-  },
-  {
-    service: "Booking & Payments Website",
-    short: "Booking + payments",
-    prefix: "",
-    price: "R8,000",
-    suffix: "",
-    blurb: "Customers book and pay online, all in one site.",
-    items: ["Online booking feature", "Online payment feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
-    turnaround: "6–8 weeks",
-    timeNote: "depending on how quickly you reply",
-    revisions: "3 rounds of changes",
-  },
-  {
-    service: "Personal Portfolio",
-    short: "Personal portfolio",
-    prefix: "",
-    price: "R2,500",
-    suffix: "",
-    blurb: "Show your work, projects or CV online in one place you can share.",
-    items: ["Showcase your work and projects", "Mobile-friendly design", "One link to share with clients or employers"],
-    turnaround: "2 weeks",
-    timeNote: "",
-    revisions: "2 rounds of changes",
-  },
-];
 
 
 const MAINTENANCE = [
@@ -234,9 +180,90 @@ const MAINTENANCE = [
     prefix: "",
     price: "R1,800",
     suffix: "/month",
-    blurb: "Recommended for booking and payment sites.",
-    items: ["Everything in Standard", "Up to 4 hours of changes a month", "Priority fixes for booking and payment problems"],
+    blurb: "For busy sites with a blog or frequent updates.",
+    items: ["Everything in Standard", "Up to 4 hours of changes a month", "Priority fixes when something goes wrong"],
     cta: "Choose this plan",
+  },
+];
+
+const PACKAGES = [
+  {
+    service: "Landing Page",
+    short: "Landing page",
+    prefix: "From ",
+    price: "R1,499",
+    suffix: "",
+    popular: false,
+    blurb: "One clean page that tells customers who you are and lets them message you instantly.",
+    items: ["1 page", "Mobile-friendly design", "WhatsApp contact button linked to your number", "Your contact details and business info"],
+    turnaround: "2 weeks",
+    timeNote: "",
+    revisions: "2 rounds of changes",
+    extraPage: "",
+    maintenance: "",
+  },
+  {
+    service: "Basic Website",
+    short: "Basic website",
+    prefix: "",
+    price: "R3,499",
+    suffix: "",
+    popular: false,
+    blurb: "A simple multi-page site for a small business.",
+    items: [
+      "Up to 5 pages",
+      { t: "No CMS: we make your updates for you", no: true },
+      "SEO basics: page titles, meta descriptions, mobile-friendly",
+      { t: "No blog", no: true },
+      "Google Analytics (GA4) installed",
+    ],
+    turnaround: "2 weeks",
+    timeNote: "",
+    revisions: "2 rounds of changes",
+    extraPage: "R500 each",
+    maintenance: `${MAINTENANCE[0].price}${MAINTENANCE[0].suffix}`,
+  },
+  {
+    service: "Standard Website",
+    short: "Standard website",
+    prefix: "",
+    price: "R5,999",
+    suffix: "",
+    popular: true,
+    blurb: "For businesses that want to edit their own text and images.",
+    items: [
+      "Up to 7 pages",
+      "CMS: simple editing of text and images",
+      "Everything in Basic SEO, plus sitemap, image optimization and Google Business Profile setup",
+      { t: "No blog", no: true },
+      "Google Analytics (GA4) + Search Console",
+    ],
+    turnaround: "3 weeks",
+    timeNote: "",
+    revisions: "3 rounds of changes",
+    extraPage: "R450 each",
+    maintenance: `${MAINTENANCE[1].price}${MAINTENANCE[1].suffix}`,
+  },
+  {
+    service: "Premium Website",
+    short: "Premium website",
+    prefix: "",
+    price: "R9,999",
+    suffix: "",
+    popular: false,
+    blurb: "Built to rank on Google and bring in leads.",
+    items: [
+      "Up to 10 pages",
+      "CMS, plus a short training session for you",
+      "Advanced SEO: schema markup, speed tuning, keyword-targeted content and Search Console",
+      "Blog with template, categories and CMS publishing",
+      "GA4 + event tracking (form submits, WhatsApp clicks, calls)",
+    ],
+    turnaround: "4 weeks",
+    timeNote: "",
+    revisions: "3 rounds of changes",
+    extraPage: "R400 each",
+    maintenance: `${MAINTENANCE[2].price}${MAINTENANCE[2].suffix}`,
   },
 ];
 
@@ -251,7 +278,6 @@ const PROJECTS = [
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
   { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
   { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "" },
-  { name: "Lux Pixels Gallery", type: " Digital gallery and booking site for a photography company", url: ""},
 ];
 
 const COMING_SOON = [
@@ -267,7 +293,15 @@ const STEPS = [
 
 function PackageCard({ pkg, onPick }: any) {
   return (
-    <div className="card" style={{ padding: 26, display: "flex", flexDirection: "column" }}>
+    <div
+      className="card"
+      style={{ padding: 26, display: "flex", flexDirection: "column", position: "relative", ...(pkg.popular ? { borderColor: T.accent } : {}) }}
+    >
+      {pkg.popular && (
+        <span className="sticker" style={{ position: "absolute", top: -16, right: 16, fontSize: 14 }}>
+          Most popular
+        </span>
+      )}
       <h3 style={{ fontSize: 24 }}>{pkg.title || pkg.service}</h3>
       <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: "10px 0 16px" }}>{pkg.blurb}</p>
       <div style={{ marginBottom: 18 }}>
@@ -276,12 +310,16 @@ function PackageCard({ pkg, onPick }: any) {
         <span style={{ color: T.dim, fontSize: 14 }}>{pkg.suffix}</span>
       </div>
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", flex: 1 }}>
-        {pkg.items.map((item: string) => (
-          <li key={item} style={{ fontSize: 14.5, lineHeight: 1.5, padding: "5px 0" }}>
-            <span style={{ color: T.pink, marginRight: 10 }}>✓</span>
-            {item}
-          </li>
-        ))}
+        {pkg.items.map((item: any) => {
+          const text = typeof item === "string" ? item : item.t;
+          const no = typeof item !== "string" && item.no;
+          return (
+            <li key={text} style={{ fontSize: 14.5, lineHeight: 1.5, padding: "5px 0", color: no ? T.dim : T.text }}>
+              <span style={{ color: no ? T.dim : T.pink, marginRight: 10 }}>{no ? "✕" : "✓"}</span>
+              {text}
+            </li>
+          );
+        })}
       </ul>
       {pkg.turnaround && (
         <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14, marginBottom: 20, fontSize: 14, lineHeight: 1.8 }}>
@@ -294,6 +332,18 @@ function PackageCard({ pkg, onPick }: any) {
             <span style={{ color: T.dim }}>Revisions: </span>
             {pkg.revisions}
           </div>
+          {pkg.extraPage ? (
+            <div>
+              <span style={{ color: T.dim }}>Extra pages: </span>
+              {pkg.extraPage}
+            </div>
+          ) : null}
+          {pkg.maintenance ? (
+            <div>
+              <span style={{ color: T.dim }}>Optional maintenance: </span>
+              {pkg.maintenance}
+            </div>
+          ) : null}
         </div>
       )}
       <a className="btn btn-primary" href="#contact" onClick={() => onPick(pkg.service)} style={{ textAlign: "center" }}>
@@ -456,10 +506,10 @@ function Site() {
             <div>
               <div className="tag" style={{ fontSize: 22, marginBottom: 14 }}>web design for small businesses</div>
               <h1 style={{ fontSize: "clamp(42px, 6vw, 96px)", lineHeight: 1.02, textShadow: "0 2px 14px #000" }}>
-                Professional websites for your business, <span className="marker" style={{ color: T.accent }}>from R1,500.</span>
+                Professional websites for your business, <span className="marker" style={{ color: T.accent }}>from R1,499.</span>
               </h1>
               <p style={{ color: T.text, opacity: 0.85, fontSize: 17, lineHeight: 1.65, maxWidth: 560, margin: "24px 0 32px", textShadow: "0 1px 8px #000" }}>
-                ICETECH builds websites, booking and payment sites, and personal portfolios for small businesses in Pretoria.
+                ICETECH builds landing pages and business websites for small businesses in Pretoria.
               </p>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
                 <a className="btn btn-primary" href="#contact">Get a quote</a>
@@ -480,7 +530,7 @@ function Site() {
               ))}
             </div>
             <p style={{ color: T.dim, fontSize: 13.5, lineHeight: 1.6, margin: "24px 0 0", maxWidth: 760 }}>
-              A revision round is one batch of changes you send us together. Time frames depend on how quickly you send content and feedback. New pages or features after sign-off are quoted separately.
+              A revision round is one batch of changes you send us together. Time frames depend on how quickly you send content and feedback. Anything not listed in a package is quoted separately.
             </p>
           </div>
         </section>
@@ -793,7 +843,7 @@ export default function App() {
     try {
       localStorage.setItem("icetech_rain", next ? "on" : "off");
     } catch (e) {
-     
+      
     }
   };
 
@@ -821,7 +871,7 @@ export default function App() {
         body: JSON.stringify({ visitor_id: vid, path: window.location.pathname }),
       }).catch(() => {});
     } catch (e) {
-     
+      /* ignore storage errors */
     }
   }, [isAdmin]);
 
