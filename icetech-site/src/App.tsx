@@ -251,6 +251,7 @@ const PROJECTS = [
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
   { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
   { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "" },
+  { name: "Lux Pixels Gallery", type: " Digital gallery and booking site for a photography company", url: ""},
 ];
 
 const COMING_SOON = [
