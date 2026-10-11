@@ -131,7 +131,7 @@ function CodeRain({ enabled }: any) {
     };
 
     setup();
-    
+   
     const timer = window.setInterval(() => {
       if (!document.hidden) draw();
     }, 50);
@@ -161,36 +161,86 @@ const PACKAGES = [
     short: "Brochure website",
     prefix: "From ",
     price: "R1,500",
+    suffix: "",
     blurb: "A clean online presence with a WhatsApp button so customers can message you instantly.",
     items: ["3–5 pages", "Mobile-friendly design", "WhatsApp contact button linked to your number", "Your contact details and business info"],
+    turnaround: "2 weeks",
+    timeNote: "",
+    revisions: "2 rounds of changes",
   },
   {
     service: "Booking Website",
     short: "Booking website",
     prefix: "",
-    price: "R4,000",
+    price: "R6,000",
+    suffix: "",
     blurb: "Let customers book you online instead of going back and forth.",
     items: ["Online booking feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
+    turnaround: "4 weeks",
+    timeNote: "",
+    revisions: "3 rounds of changes",
   },
   {
     service: "Booking & Payments Website",
     short: "Booking + payments",
     prefix: "",
-    price: "R6,000",
+    price: "R8,000",
+    suffix: "",
     blurb: "Customers book and pay online, all in one site.",
     items: ["Online booking feature", "Online payment feature", "Mobile-friendly design", "WhatsApp contact button linked to your number"],
+    turnaround: "6–8 weeks",
+    timeNote: "depending on how quickly you reply",
+    revisions: "3 rounds of changes",
   },
   {
     service: "Personal Portfolio",
     short: "Personal portfolio",
     prefix: "",
     price: "R2,500",
+    suffix: "",
     blurb: "Show your work, projects or CV online in one place you can share.",
     items: ["Showcase your work and projects", "Mobile-friendly design", "One link to share with clients or employers"],
+    turnaround: "2 weeks",
+    timeNote: "",
+    revisions: "2 rounds of changes",
   },
 ];
 
-const SERVICES = [...PACKAGES.map((p) => p.service), "Not sure yet"];
+
+const MAINTENANCE = [
+  {
+    service: "Maintenance: Basic",
+    title: "Basic",
+    prefix: "",
+    price: "R500",
+    suffix: "/month",
+    blurb: "Keep a simple site online and working.",
+    items: ["Uptime checks", "Fixes if something breaks", "1 small content change a month", "Replies within 3 business days"],
+    cta: "Choose this plan",
+  },
+  {
+    service: "Maintenance: Standard",
+    title: "Standard",
+    prefix: "",
+    price: "R1,000",
+    suffix: "/month",
+    blurb: "For sites that change regularly.",
+    items: ["Everything in Basic", "Up to 2 hours of changes a month", "Replies within 1 business day"],
+    cta: "Choose this plan",
+  },
+  {
+    service: "Maintenance: Premium",
+    title: "Premium",
+    prefix: "",
+    price: "R1,800",
+    suffix: "/month",
+    blurb: "Recommended for booking and payment sites.",
+    items: ["Everything in Standard", "Up to 4 hours of changes a month", "Priority fixes for booking and payment problems"],
+    cta: "Choose this plan",
+  },
+];
+
+const SERVICES = [...PACKAGES.map((p) => p.service), ...MAINTENANCE.map((m) => m.service), "Not sure yet"];
 
 
 const PROJECTS = [
@@ -201,7 +251,6 @@ const PROJECTS = [
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
   { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
   { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "" },
-  { name: "Lux Pixels site" , type: " Gallery website for a photography company", url:""},
 ];
 
 const COMING_SOON = [
@@ -218,13 +267,14 @@ const STEPS = [
 function PackageCard({ pkg, onPick }: any) {
   return (
     <div className="card" style={{ padding: 26, display: "flex", flexDirection: "column" }}>
-      <h3 style={{ fontSize: 24 }}>{pkg.service}</h3>
+      <h3 style={{ fontSize: 24 }}>{pkg.title || pkg.service}</h3>
       <p style={{ color: T.dim, fontSize: 14.5, lineHeight: 1.6, margin: "10px 0 16px" }}>{pkg.blurb}</p>
       <div style={{ marginBottom: 18 }}>
         <span style={{ color: T.dim, fontSize: 14 }}>{pkg.prefix}</span>
         <span style={{ fontFamily: "'Anton', sans-serif", fontSize: 44, color: T.accent }}>{pkg.price}</span>
+        <span style={{ color: T.dim, fontSize: 14 }}>{pkg.suffix}</span>
       </div>
-      <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", flex: 1 }}>
+      <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", flex: 1 }}>
         {pkg.items.map((item: string) => (
           <li key={item} style={{ fontSize: 14.5, lineHeight: 1.5, padding: "5px 0" }}>
             <span style={{ color: T.pink, marginRight: 10 }}>✓</span>
@@ -232,8 +282,21 @@ function PackageCard({ pkg, onPick }: any) {
           </li>
         ))}
       </ul>
+      {pkg.turnaround && (
+        <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 14, marginBottom: 20, fontSize: 14, lineHeight: 1.8 }}>
+          <div>
+            <span style={{ color: T.dim }}>Time frame: </span>
+            {pkg.turnaround}
+            {pkg.timeNote ? <span style={{ color: T.dim }}> ({pkg.timeNote})</span> : null}
+          </div>
+          <div>
+            <span style={{ color: T.dim }}>Revisions: </span>
+            {pkg.revisions}
+          </div>
+        </div>
+      )}
       <a className="btn btn-primary" href="#contact" onClick={() => onPick(pkg.service)} style={{ textAlign: "center" }}>
-        Get this package
+        {pkg.cta || "Get this package"}
       </a>
     </div>
   );
@@ -375,6 +438,7 @@ function Site() {
           <div style={{ display: "flex", alignItems: "center" }}>
             <nav className="nav-links">
               <a className="nav-link" href="#services">Services</a>
+              <a className="nav-link" href="#maintenance">Maintenance</a>
               <a className="nav-link" href="#work">Our work</a>
               <a className="nav-link" href="#soon">Coming soon</a>
               <a className="nav-link" href="#contact">Contact</a>
@@ -414,6 +478,24 @@ function Site() {
                 <PackageCard key={pkg.service} pkg={pkg} onPick={setService} />
               ))}
             </div>
+            <p style={{ color: T.dim, fontSize: 13.5, lineHeight: 1.6, margin: "24px 0 0", maxWidth: 760 }}>
+              A revision round is one batch of changes you send us together. Time frames depend on how quickly you send content and feedback. New pages or features after sign-off are quoted separately.
+            </p>
+          </div>
+        </section>
+
+        <section id="maintenance" style={{ borderTop: `2px solid ${T.line}` }}>
+          <div className="wrap" style={vpad(72)}>
+            <h2 style={{ fontSize: 44 }}>Maintenance plans</h2>
+            <p style={{ color: T.dim, fontSize: 16, margin: "10px 0 36px" }}>Keep your site running after launch. Billed monthly.</p>
+            <div className="grid-3">
+              {MAINTENANCE.map((m) => (
+                <PackageCard key={m.service} pkg={m} onPick={setService} />
+              ))}
+            </div>
+            <p style={{ color: T.dim, fontSize: 13.5, lineHeight: 1.6, margin: "24px 0 0", maxWidth: 760 }}>
+              Hosting and domain costs are quoted separately.
+            </p>
           </div>
         </section>
 
@@ -710,7 +792,7 @@ export default function App() {
     try {
       localStorage.setItem("icetech_rain", next ? "on" : "off");
     } catch (e) {
-    
+     
     }
   };
 
@@ -720,7 +802,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-
+ 
   useEffect(() => {
     if (isAdmin || !TRACKING_ENABLED) return;
     try {
@@ -738,7 +820,7 @@ export default function App() {
         body: JSON.stringify({ visitor_id: vid, path: window.location.pathname }),
       }).catch(() => {});
     } catch (e) {
-    
+     
     }
   }, [isAdmin]);
 
