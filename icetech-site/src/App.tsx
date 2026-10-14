@@ -277,7 +277,8 @@ const PROJECTS = [
   { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "" },
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
   { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
-  { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "" },
+  { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "https://k3vin11-beep.github.io/ndzalo-portfolio/" },
+  { name: "Khodanis Digital Portfolio", type: "Portfolio website for a final year Bcom Law student", url: "https://k3vin11-beep.github.io/khodani-portfolio/"},
 ];
 
 const COMING_SOON = [
