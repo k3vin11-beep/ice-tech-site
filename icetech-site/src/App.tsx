@@ -271,12 +271,12 @@ const SERVICES = [...PACKAGES.map((p) => p.service), ...MAINTENANCE.map((m) => m
 
 
 const PROJECTS = [
-  { name: "Briis Best Bakes", type: "Home bakery site with a photo gallery of cakes, muffins and custom bakes", url: "" },
+  { name: "Briis Best Bakes", type: "Home bakery site with a photo gallery of cakes, muffins and custom bakes", url: "https://k3vin11-beep.github.io/briis-best-bakes-/" },
   { name: "Cynosure Wig Atelier", type: "Wig installation services and price list", url: "" },
   { name: "Mvuni's Digital Portfolio", type: "Portfolio website for a web developer", url: "https://k3vin11-beep.github.io/personal-portfolio/" },
-  { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "" },
+  { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "https://k3vin11-beep.github.io/land-of-laundry-site/" },
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
-  { name: "The 24th Vision", type: "Portfolio and gallery website", url: "" },
+  { name: "The 24th Vision", type: "Portfolio and gallery website", url: "https://k3vin11-beep.github.io/the-24th-vision/" },
   { name: "Ndzalos Digital Portfolio", type: "Portfolio website for an actuary", url: "https://k3vin11-beep.github.io/ndzalo-portfolio/" },
   { name: "Khodanis Digital Portfolio", type: "Portfolio website for a final year Bcom Law student", url: "https://k3vin11-beep.github.io/khodani-portfolio/"},
 ];
