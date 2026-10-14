@@ -272,7 +272,7 @@ const SERVICES = [...PACKAGES.map((p) => p.service), ...MAINTENANCE.map((m) => m
 
 const PROJECTS = [
   { name: "Briis Best Bakes", type: "Home bakery site with a photo gallery of cakes, muffins and custom bakes", url: "https://k3vin11-beep.github.io/briis-best-bakes-/" },
-  { name: "Cynosure Wig Atelier", type: "Wig installation services and price list", url: "" },
+  { name: "Cynosure Wig Atelier", type: "Wig installation services and price list", url: "https://k3vin11-beep.github.io/cynosure-wig-atelier/" },
   { name: "Mvuni's Digital Portfolio", type: "Portfolio website for a web developer", url: "https://k3vin11-beep.github.io/personal-portfolio/" },
   { name: "Land of Laundry", type: "Laundry service packages and pricing", url: "https://k3vin11-beep.github.io/land-of-laundry-site/" },
   { name: "Thakani's Wigs", type: "Website for a wig business", url: "" },
